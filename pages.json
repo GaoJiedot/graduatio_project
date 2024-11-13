@@ -1,0 +1,167 @@
+{
+	"pages": [
+
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationBarTitleText": "登录"
+			}
+		},
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "首页"
+			}
+		},
+		{
+			"path": "pages/user/user",
+			"style": {
+				"navigationBarTitleText": "我的"
+			}
+		},
+		{
+			"path": "pages/order/order",
+			"style": {
+				"navigationBarTitleText": "订单"
+			}
+		},
+		{
+			"path": "pages/share/share",
+			"style": {
+				"navigationBarTitleText": "分享"
+			}
+		},
+		{
+			"path": "component/list/list",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		},
+
+		{
+			"path": "component/margin-swiper/margin-swiper",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		},
+		{
+			"path": "pages/search/search",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		},
+		{
+			"path": "component/menu/menu",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		},
+		{
+			"path": "component/time-slot-selector/time-slot-selector",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		},
+		{
+			"path": "pages/Store-details/Store-details",
+			"style": {
+				"navigationBarTitleText": "店铺详情"
+			}
+		},
+		{
+			"path": "pages/appointment/appointment",
+			"style": {
+				"navigationBarTitleText": "预约页面"
+			}
+		},
+		{
+			"path": "pages/chat/chat",
+			"style": {
+				"navigationBarTitleText": "聊天"
+			}
+		},
+		{
+			"path": "pages/account/account",
+			"style": {
+				"navigationBarTitleText": "个人信息"
+			}
+		},
+		{
+			"path": "pages/chat/message",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		},
+
+		{
+			"path": "pages/map/map",
+			"style": {
+				"navigationBarTitleText": "导航"
+			}
+		}, 
+		{
+			"path": "pages/search-detail/search-detail",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+
+		},
+		{
+			"path" : "pages/add/add",
+			"style" : 
+			{
+				"navigationBarTitleText" : "分享"
+			}
+		}
+
+
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "uni-app",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+
+
+	"uniIdRouter": {},
+	"tabBar": {
+		"color": "#9CA2A6",
+		"selectedColor": "#28aff6",
+		"list": [{
+				"text": "首页",
+				"pagePath": "pages/index/index",
+				"iconPath": "static/首页B.png",
+				"selectedIconPath": "static/首页a.png"
+			},
+			{
+				"text": "分享",
+				"pagePath": "pages/share/share",
+				"iconPath": "static/社区B.png",
+				"selectedIconPath": "static/社区a.png"
+			},
+			{
+				"text": "消息",
+				"pagePath": "pages/chat/chat",
+				"iconPath": "static/讨论B.png",
+				"selectedIconPath": "static/讨论a.png"
+			},
+			{
+				"text": "订单",
+				"pagePath": "pages/order/order",
+				"iconPath": "static/订单B.png",
+				"selectedIconPath": "static/订单a.png"
+			},
+			{
+				"text": "我的",
+				"pagePath": "pages/user/user",
+				"iconPath": "static/我的-B.png",
+				"selectedIconPath": "static/我的-a.png"
+			}
+
+		]
+
+
+	}
+
+}
