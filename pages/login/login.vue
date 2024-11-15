@@ -77,10 +77,10 @@
 			// 页面加载时检查用户状态
 			this.checkUserStatus();
 			uni.request({
-				url: '/api/loginstate',
+				url: 'http://localhost:8080/user/1',
 				method: 'GET',
 				success: (res) => {
-					this.loginstate = res.data.loginstate
+					console.log(res)
 				}
 			})
 		}

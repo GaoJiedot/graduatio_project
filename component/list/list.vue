@@ -6,34 +6,35 @@
 			<img src="/static/logo.png" alt="" />
 			<!-- 内容 -->
 			<view class="content">
-				<text>1111</text>
+				<text>{{orderdata.orderName}}</text>
 
 				<!-- 遍历alabal数组，根据orderstate的值判断是否显示 -->
-				<view v-for="(alabal,index) in alabal" :key="index" class="clabal" v-if="orderstate===0">
-					{{alabal}}
+				<view v-for="(tab, index) in orderdata.orderTabs" :key="index" class="clabal"
+					v-if="orderdata.orderstatus===0">
+					<!-- {{ordertab}} -->
 				</view>
 
 				<!-- 根据orderstate的值判断是否显示价格 -->
-				<view class="price-container" v-if="orderstate===1">
-					<text class="price">¥{{ price }}</text>
+				<view class="price-container" v-if="orderdata.orderStatus===1">
+					<text class="price">¥{{orderdata.orderPrice}}</text>
 				</view>
 			</view>
 		</view>
 
 		<!-- 根据orderstate的值判断是否显示时间选择器 -->
-		<view class="atime" v-if="orderstate===0">
+		<view class="atime" v-if="orderdata.orderStatus===0">
 			<timeSlotSelectorVue></timeSlotSelectorVue>
 		</view>
 
 
 		<!-- 根据orderstate的值判断是否显示预约按钮 -->
-		<view class="touse" v-if="orderstate===1">
+		<view class="touse" v-if="orderdata.orderStatus===1">
 			<button class="appointment-btn">去预约</button>
 		</view>
 
 
 		<!-- 根据orderstate的值判断是否显示已使用状态 -->
-		<view class="used" v-if="orderstate===2">
+		<view class="used" v-if="orderdata.orderStatus===2">
 			<view class="used-status">
 				<text class="used-icon">✓</text>
 				<text>已使用</text>
@@ -47,28 +48,44 @@
 	import timeSlotSelectorVue from '../time-slot-selector/time-slot-selector.vue';
 	export default {
 		props: {
-			orderstate: 
-				{
-				    type: Number,
-				    required: true,
-				    default: 0
-				  }
-			
+			orderdata: {
+
+				orderName: {
+					type: String,
+					required: true
+				},
+				orderTabs: {
+					type: Array,
+					required: true
+				},
+				orderPrice: {
+					type: Number,
+					required: true
+				},
+				orderstatus: {
+					type: Number,
+					required: true
+
+				}
+			}
+
 		},
 		components: {
 			timeSlotSelectorVue
 		},
 		data() {
 			return {
-			
-				alabal: [1, 222, 333, 444, 1, 222, 333, 444],
-			
-				price: 199.00
-			};
+
+
+			}
 		},
 		methods: {
-
+			
+		},
+		mounted() {
+			console.log(this.orderdata.orderstatus)
 		}
+
 	}
 </script>
 

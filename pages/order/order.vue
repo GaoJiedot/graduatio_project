@@ -11,10 +11,10 @@
 		<!-- 选项卡内容区域 -->
 		<view class="tab-content">
 			<view v-for="(item, index) in selectionlist" :key="index" v-if="activeTab === 0" @click="toapp">
-				<listVue :Selectionlist="item" :orderstate= 1></listVue>
+				<listVue :Selectionlist="item" :orderstatus= 1></listVue>
 			</view>
 			<view v-for="(item, index) in selectionlist" :key="index" v-if="activeTab === 1">
-				<listVue :Selectionlist="item" :orderstate= 2></listVue>
+				<listVue :Selectionlist="item" :orderstatus= 2></listVue>
 			</view>
 			</view>
 
