@@ -2,9 +2,9 @@
 	<view class="container">
 		<view class="box">
 			<view class="searchbox">
-				<img class="searchicon" src="../../static/搜索框.png" alt="" />
+				<img class="searchicon" src="../../static/icon/搜索框.png" alt="" />
 				<input type="text" v-model="searchQuery" placeholder="请输入搜索" />
-				<img class="delicon" src="../../static/清除.png" alt="" @click="clearaway" />
+				<img class="delicon" src="../../static/icon/清除.png" alt="" @click="clearaway" />
 				<button @click="searchbtn">搜索</button>
 			</view>
 		</view>
@@ -12,7 +12,7 @@
 		<!-- 位置选择区域 -->
 		<view class="location-section" @click="showLocationPicker">
 			<view class="location-wrap">
-				<img class="location-icon" src="../../static/定位.png" alt="" />
+				<img class="location-icon" src="../../static/icon/定位.png" alt="" />
 				
 				<text class="location-text">{{ currentLocation || '选择位置' }}</text>
 			</view>

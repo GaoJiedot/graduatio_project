@@ -3,16 +3,16 @@
 		<view class="box">
 
 			<view class="searchbox" @click="search">
-				<img class="searchicon" src="../../static/搜索框.png" alt="" />
+				<img class="searchicon" src="../../static/icon/搜索框.png" alt="" />
 				<input type="text" v-model="searchQuery" placeholder="请输入搜索" />
-				<img class="delicon" src="../../static/清除.png" alt=""  @click="clearaway"/>
+				<img class="delicon" src="../../static/icon/清除.png" alt=""  @click="clearaway"/>
 				<button @click="searchbtn">搜索</button>
 			</view>
 		</view>
 		<view v-if="searchHistory.length > 0" class="history">
 			<view class="history-title">
 				<text>搜索历史</text>
-				<img src="../../static/del2.png" alt="delete icon" class="icon delete-icon" @click="clearHistory" />
+				<img src="../../static/icon/del2.png" alt="delete icon" class="icon delete-icon" @click="clearHistory" />
 			</view>
 			<view class="tags">
 				<view v-for="(record, index) in searchHistory" :key="index" class="tag">

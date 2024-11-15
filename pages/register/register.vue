@@ -14,21 +14,14 @@
 					<input class="uni-input" type="number" placeholder="请输入手机号" />
 					<input class="uni-input" password type="text" placeholder="请输入密码" />
 				</view>
-				<text class="forget" @click="forgetbtn">忘记密码</text>
-				<text class="register" @click="registerbtn">注册账号</text>
-				<button class="login-btn" @click="login">登录</button>
+				
+				<button class="login-btn" @click="login">注册</button>
 			</view>
 
-			<!-- 如果有用户信息，显示用户信息 -->
-			<view v-if="userInfo" class="user-info">
-				<view class="avatar">
-					<text class="avatar-placeholder">{{ userInfo.openid.charAt(0) }}</text>
-				</view>
-				<view class="welcome-back">欢迎回来</view>
-				<view class="user-id">{{ userInfo.openid }}</view>
-			</view>
+	
+			
 		</view>
-		<!-- 提示文本 -->
+		
 		<text class="tips">小程序由GJdot制作</text>
 	</view>
 </template>
@@ -42,47 +35,13 @@
 			};
 		},
 		methods: {
-			forgetbtn() {
-				uni.navigateTo({
-					url: "/pages/forgetpage/forgetpage"
-				})
-			},
-			registerbtn() {
-				uni.navigateTo({
-					url:"/pages/register/register"
-				})
-			},
-			// 页面加载时检查本地是否已存储用户信息
-			checkUserStatus() {
-				const storedUserInfo = uni.getStorageSync('userInfo');
-				if (storedUserInfo) {
-					// 已经登录过，直接跳转到其他页面
-					this.userInfo = storedUserInfo;
-					uni.switchTab({
-						url: "/pages/index/index" // 替换为目标页面路径
-					});
-				} else {
-					// 未登录，显示登录按钮
-					this.userInfo = null;
-				}
-			},
+		
 			// 登录方法
 			login() {
-				uni.reLaunch({
+				uni.navigateBack({
 					url: "/pages/index/index"
 				})
 			}
-		},
-		onLoad() {
-			// 页面加载时检查用户状态
-			this.checkUserStatus();
-			uni.request({
-				url: '/api/loginstate',
-				method: 'GET',
-				success: (res) => {
-					this.loginstate = res.data.loginstate
-				}
-			})
 		}
 	};
 </script>
@@ -143,8 +102,7 @@
 					color: #3B82F6;
 
 				}
-
-				.register {
+				.register{
 					color: #3B82F6;
 				}
 

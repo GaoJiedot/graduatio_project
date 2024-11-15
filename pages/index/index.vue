@@ -3,7 +3,7 @@
 		<!-- 搜索框 -->
 		<view class="box">
 			<view class="searchbox" @click="search">
-				<img src="../../static/搜索框.png" alt="" />
+				<img src="../../static/icon/搜索框.png" alt="" />
 			</view>
 		</view>
 		<!-- 轮播图 -->
