@@ -1,50 +1,160 @@
 <template>
 	<view class="container">
-		<!-- 背景图片 -->
-		<view class="bglogin"><img src="/static/khl20240930232745242.png" alt="" /></view>
+		<view class="bglogin"><img src="https://static.vecteezy.com/system/resources/previews/006/046/341/original/barbershop-logo-vintage-classic-style-salon-fashion-haircut-pomade-badge-icon-simple-minimalist-modern-barber-pole-razor-shave-scissor-razor-blade-retro-symbol-luxury-elegant-design-free-vector.jpg" alt="" /></view>
 		<view class="content">
-			<!-- 标题 -->
-			<view class="title">用户登录</view>
-			<!-- 欢迎文本 -->
+			<view class="title">用户注册</view>
 			<view class="welcome-text">欢迎使用</view>
 
-			<!-- 如果没有用户信息，显示登录按钮 -->
-			<view v-if="!userInfo||loginstate===0" class="userlogin">
+			<view class="userlogin">
 				<view class="uni-form-item uni-column">
-					<input class="uni-input" type="number" placeholder="请输入手机号" />
-					<input class="uni-input" password type="text" placeholder="请输入密码" />
+					<input class="uni-input" type="number" v-model="userName" placeholder="请输入手机号" />
+					<input class="uni-input" password type="text" v-model="password" placeholder="请输入密码" />
+					<input class="uni-input" type="email" v-model="email" placeholder="请输入邮箱" />
 				</view>
-				
-				<button class="login-btn" @click="login">注册</button>
-			</view>
 
-	
-			
+				<button class="login-btn" @click="register">注册</button>
+			</view>
 		</view>
-		
+
 		<text class="tips">小程序由GJdot制作</text>
 	</view>
 </template>
-
 <script>
 	export default {
 		data() {
 			return {
-				// 用户信息
-				userInfo: null
+				userName: '',
+				password: '',
+				email: ''
 			};
 		},
 		methods: {
-		
-			// 登录方法
-			login() {
-				uni.navigateBack({
-					url: "/pages/index/index"
-				})
+			validateUserName() {
+				const userNameRegex = /^1[3-9]\d{9}$/;
+				if (!userNameRegex.test(this.userName)) {
+					uni.showToast({
+						title: '请输入正确的手机号',
+						icon: 'none'
+					});
+					return false;
+				}
+				return true;
+			},
+			validatePassword() {
+				if (this.password.length < 6) {
+					uni.showToast({
+						title: '密码长度不能少于6位',
+						icon: 'none'
+					});
+					return false;
+				}
+				return true;
+			},
+			validateEmail() {
+				const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+				if (!emailRegex.test(this.email)) {
+					uni.showToast({
+						title: '请输入正确的邮箱格式',
+						icon: 'none'
+					});
+					return false;
+				}
+				return true;
+			},
+
+			register() {
+
+				if (!this.validateUserName() || !this.validatePassword() || !this.validateEmail()) {
+					return;
+				}
+
+				uni.showLoading({
+					title: '处理中...'
+				});
+
+
+				uni.request({
+					url: `http://localhost:8080/user/username/${this.userName}`, 
+					method: 'GET',
+
+					success: (res) => {
+						console.log(res.data)
+						if (res.data.code === 200) { 
+							uni.showToast({
+								title: '账号已存在',
+								icon: 'none',
+
+							});
+							setTimeout(() => {
+								uni.navigateBack({
+									delta: 1
+								});
+							}, 2000);
+
+						} else if (res.data.code === 500) {
+							
+							uni.request({
+								url: 'http://localhost:8080/user',
+								method: 'POST',
+								data: {
+									userName: this.userName,
+									password: this.password,
+									email: this.email
+								},
+								success: (res) => {
+									if (res.data.code === 200) {
+										uni.showToast({
+											title: '注册成功',
+											icon: 'success'
+										});
+										setTimeout(() => {
+											uni.navigateBack({
+												delta: 1
+											});
+										}, 2000);
+									} else {
+										uni.showToast({
+											title: res.data.message || '注册失败',
+											icon: 'none'
+										});
+									}
+								},
+								fail: () => {
+									uni.showToast({
+										title: '网络错误，请稍后重试',
+										icon: 'none'
+									});
+								},
+								complete: () => {
+									uni.hideLoading();
+								
+								}
+							});
+						} else {
+							uni.showToast({
+								title: res.data.message || '查询失败',
+								icon: 'none'
+							});
+						}
+					},
+					fail: () => {
+						uni.showToast({
+							title: '网络错误，请稍后重试',
+							icon: 'none'
+						});
+					},
+					complete: () => {
+						uni.hideLoading();
+
+					}
+				});
 			}
+
+
 		}
 	};
 </script>
+
 
 <style lang="scss" scoped>
 	.container {
@@ -102,7 +212,8 @@
 					color: #3B82F6;
 
 				}
-				.register{
+
+				.register {
 					color: #3B82F6;
 				}
 

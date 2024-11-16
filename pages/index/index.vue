@@ -17,7 +17,7 @@
 		</view>
 		<!-- 循环渲染数据 -->
 		<view v-for="(item, index) in data " :key="index" class="list-item" @click="todeatils">
-			<listVue :orderdata="data[index]"></listVue>
+			<listVue :tabulatedata="data[index]"></listVue>
 		</view>
 	</view>
 </template>
@@ -36,9 +36,10 @@
 		data() {
 			return {
 				data: [{
-					orderName: '',
-					orderStatus: '',
-					orderId: '',
+					"tabulateId": null,
+					"tabulateName": "",
+					"tabulateTabs": "",
+					"tabulateType": null
 				}]
 			};
 		},
@@ -56,10 +57,9 @@
 		},
 		onLoad() {
 			uni.request({
-				url: 'http://localhost:8080/order/type/1',
+				url: 'http://localhost:8080/tabulate/type/0',
 				method: 'GET',
 				success: (res) => {
-					console.log('Received data:', res);
 					this.data = res.data.data;
 					console.log(this.data);
 				},

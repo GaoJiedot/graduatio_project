@@ -1,27 +1,31 @@
 <template>
 	<view class="container">
-		<!-- 背景图片 -->
-		<view class="bglogin"><img src="/static/khl20240930232745242.png" alt="" /></view>
+
+		<view class="bglogin"><img
+				src="https://static.vecteezy.com/system/resources/previews/006/046/341/original/barbershop-logo-vintage-classic-style-salon-fashion-haircut-pomade-badge-icon-simple-minimalist-modern-barber-pole-razor-shave-scissor-razor-blade-retro-symbol-luxury-elegant-design-free-vector.jpg"
+				alt="" /></view>
 		<view class="content">
-			<!-- 标题 -->
-			<view class="title">用户登录</view>
-			<!-- 欢迎文本 -->
+
+			<view class="title">修改密码</view>
+
 			<view class="welcome-text">欢迎使用</view>
 
-			<!-- 如果没有用户信息，显示登录按钮 -->
-			<view v-if="!userInfo||loginstate===0" class="userlogin">
+
+			<view  class="userlogin">
 				<view class="uni-form-item uni-column">
-					<input class="uni-input" type="number" placeholder="请输入手机号" />
-					<input class="uni-input" password type="text" placeholder="请输入新密码" />
+					<input class="uni-input" type="number" v-model="userName" placeholder="请输入手机号" />
+					<input class="uni-input" type="email" v-model="email" placeholder="请输入邮箱" />
+					<input class="uni-input" password type="text" v-model="password" placeholder="请输入新密码" />
+					<input class="uni-input" type="number" v-model="code" placeholder="请输入验证码" />
 				</view>
-				
+				<text @click="sendcode">发送验证码</text>
 				<button class="login-btn" @click="login">修改</button>
 			</view>
 
-	
-			
+
+
 		</view>
-		
+
 		<text class="tips">小程序由GJdot制作</text>
 	</view>
 </template>
@@ -30,16 +34,82 @@
 	export default {
 		data() {
 			return {
-				// 用户信息
-				userInfo: null
+				userName: '',
+				email: '', 
+				password: '', 
+				code:null
 			};
 		},
 		methods: {
-		
-			// 登录方法
+			sendcode() {
+
+			},
+			validateUserName() {
+				const userNameRegex = /^1[3-9]\d{9}$/;
+				if (!userNameRegex.test(this.userName)) {
+					uni.showToast({
+						title: '请输入正确的手机号',
+						icon: 'none'
+					});
+					return false;
+				}
+				return true;
+			},
+			validatePassword() {
+				if (this.password.length < 6) {
+					uni.showToast({
+						title: '密码长度不能少于6位',
+						icon: 'none'
+					});
+					return false;
+				}
+				return true;
+			},
+			validateEmail() {
+				const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+				if (!emailRegex.test(this.email)) {
+					uni.showToast({
+						title: '请输入正确的邮箱格式',
+						icon: 'none'
+					});
+					return false;
+				}
+				return true;
+			},
+			validateCode() {
+				if (this.code.length !== 6) {
+					uni.showToast({
+						title: '请输入正确的验证码',
+						icon: 'none'
+					});
+					return false;
+				}
+				return true;
+			},
 			login() {
-				uni.navigateBack({
-					url: "/pages/index/index"
+				if (!this.validateUserName() || !this.validatePassword() || !this.validateEmail() || !this
+				.validateCode()) {
+					return;
+				}
+
+
+				uni.request({
+					url: 'http://localhost:8080/user',
+					method: 'PUT',
+					success: res => {
+						if (res.data.code === 200)
+							uni.showToast({
+								title: '修改成功',
+								icon: 'success',
+								duration: 2000
+							})
+						else
+							uni.showToast({
+								title: '修改失败',
+								icon: 'error',
+								duration: 2000
+							})
+					}
 				})
 			}
 		}
@@ -74,6 +144,10 @@
 			z-index: 1;
 			background: linear-gradient(180deg, transparent 0%, #f8f9fa 20%);
 
+			text {
+				color: #3B82F6;
+			}
+
 			.userlogin {
 				margin-top: -20rpx;
 				text-align: center;
@@ -97,14 +171,8 @@
 					}
 				}
 
-				.forget {
-					margin-right: 80rpx;
-					color: #3B82F6;
+				
 
-				}
-				.register{
-					color: #3B82F6;
-				}
 
 			}
 		}

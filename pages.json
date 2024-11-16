@@ -126,6 +126,13 @@
 			{
 				"navigationBarTitleText" : "注册"
 			}
+		},
+		{
+			"path" : "component/orderList/orderList",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
 		}
 
 
@@ -136,6 +143,10 @@
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8"
 	},
+	"app-plus": {
+		"softinputMode": "adjustResize"
+	},
+
 
 
 	"uniIdRouter": {},

@@ -1,34 +1,30 @@
 <template>
 	<view class="container">
-		<!-- 背景图片 -->
-		<view class="bglogin"><img src="/static/khl20240930232745242.png" alt="" /></view>
+		<view class="bglogin"><img src="https://static.vecteezy.com/system/resources/previews/006/046/341/original/barbershop-logo-vintage-classic-style-salon-fashion-haircut-pomade-badge-icon-simple-minimalist-modern-barber-pole-razor-shave-scissor-razor-blade-retro-symbol-luxury-elegant-design-free-vector.jpg" alt="" /></view>
 		<view class="content">
-			<!-- 标题 -->
+
 			<view class="title">用户登录</view>
-			<!-- 欢迎文本 -->
+
 			<view class="welcome-text">欢迎使用</view>
 
-			<!-- 如果没有用户信息，显示登录按钮 -->
-			<view v-if="!userInfo||loginstate===0" class="userlogin">
+			<view v-if="!userInfo" class="userlogin">
 				<view class="uni-form-item uni-column">
-					<input class="uni-input" type="number" placeholder="请输入手机号" />
-					<input class="uni-input" password type="text" placeholder="请输入密码" />
+					<input class="uni-input" type="number" v-model="useName" placeholder="请输入手机号" />
+					<input class="uni-input" password type="text" v-model="password" placeholder="请输入密码" />
 				</view>
 				<text class="forget" @click="forgetbtn">忘记密码</text>
 				<text class="register" @click="registerbtn">注册账号</text>
 				<button class="login-btn" @click="login">登录</button>
 			</view>
 
-			<!-- 如果有用户信息，显示用户信息 -->
 			<view v-if="userInfo" class="user-info">
 				<view class="avatar">
-					<text class="avatar-placeholder">{{ userInfo.openid.charAt(0) }}</text>
+					<text class="avatar-placeholder">{{ userInfo.useName.charAt(0) }}</text>
 				</view>
 				<view class="welcome-back">欢迎回来</view>
-				<view class="user-id">{{ userInfo.openid }}</view>
+				<view class="user-id">{{ userInfo.useName }}</view>
 			</view>
 		</view>
-		<!-- 提示文本 -->
 		<text class="tips">小程序由GJdot制作</text>
 	</view>
 </template>
@@ -37,7 +33,8 @@
 	export default {
 		data() {
 			return {
-				// 用户信息
+				useName: '',
+				password: '',
 				userInfo: null
 			};
 		},
@@ -49,40 +46,133 @@
 			},
 			registerbtn() {
 				uni.navigateTo({
-					url:"/pages/register/register"
+					url: "/pages/register/register"
 				})
 			},
-			// 页面加载时检查本地是否已存储用户信息
-			checkUserStatus() {
-				const storedUserInfo = uni.getStorageSync('userInfo');
-				if (storedUserInfo) {
-					// 已经登录过，直接跳转到其他页面
-					this.userInfo = storedUserInfo;
-					uni.switchTab({
-						url: "/pages/index/index" // 替换为目标页面路径
+			validateUseName() {
+				const useNameRegex = /^1[3-9]\d{9}$/;
+				if (!useNameRegex.test(this.useName)) {
+					uni.showToast({
+						title: '请输入正确的手机号',
+						icon: 'none'
 					});
-				} else {
-					// 未登录，显示登录按钮
-					this.userInfo = null;
+					return false;
 				}
+				return true;
 			},
-			// 登录方法
+			validatePassword() {
+				if (this.password.length < 6) {
+					uni.showToast({
+						title: '密码长度不能少于6位',
+						icon: 'none'
+					});
+					return false;
+				}
+				return true;
+			},
 			login() {
-				uni.reLaunch({
-					url: "/pages/index/index"
-				})
+			    if (!this.validateUseName() || !this.validatePassword()) {
+			        return;
+			    }
+			
+			    uni.showLoading({
+			        title: '登录中...'
+			    });
+			
+			    uni.request({
+			        url: 'http://localhost:8080/user/username/${this.userName}',
+			        method: 'GET',
+			        success: (res) => {
+			            if (res.data.code === 200 && res.data.data) {
+			             
+			                this.doLogin();
+			            } else {
+			                uni.showToast({
+			                    title: '用户不存在',
+			                    icon: 'none'
+			                });
+			                uni.hideLoading();
+			            }
+			        },
+			        fail: (err) => {
+			            uni.showToast({
+			                title: '网络错误，请稍后重试',
+			                icon: 'none'
+			            });
+			            uni.hideLoading();
+			        }
+			    });
+			},
+			
+		
+			doLogin() {
+			    uni.request({
+			        url: 'http://localhost:8080/user',  
+			        method: 'POST',
+			        data: {
+			            userName: this.useName,
+			            password: this.password
+			        },
+			        success: (res) => {
+			            if (res.data.code === 200 && res.data.data) {  
+			                const userInfo = {
+			                    useName: this.useName,
+			                    loginTime: new Date().getTime(),
+			                    ...res.data.data 
+			                };
+			
+			                uni.setStorageSync('userInfo', userInfo);
+			                this.userInfo = userInfo;
+			
+			                uni.showToast({
+			                    title: '登录成功',
+			                    icon: 'success'
+			                });
+			
+			                setTimeout(() => {
+			                    uni.switchTab({
+			                        url: "/pages/index/index"
+			                    });
+			                }, 1500);
+			            } else {
+			                uni.showToast({
+			                    title: res.data.message || '用户名或密码错误',
+			                    icon: 'none'
+			                });
+			            }
+			        },
+			        fail: (err) => {
+			            uni.showToast({
+			                title: '网络错误，请稍后重试',
+			                icon: 'none'
+			            });
+			        },
+			        complete: () => {
+			            uni.hideLoading();
+			        }
+			    });
+			},
+
+			checkLoginStatus() {
+				const userInfo = uni.getStorageSync('userInfo');
+				if (userInfo) {
+					const currentTime = new Date().getTime();
+					const loginTime = userInfo.loginTime;
+
+					if (currentTime - loginTime < 7 * 24 * 60 * 60 * 1000) {
+						this.userInfo = userInfo;
+						uni.switchTab({
+							url: "/pages/index/index"
+						});
+					} else {
+						uni.removeStorageSync('userInfo');
+						this.userInfo = null;
+					}
+				}
 			}
 		},
 		onLoad() {
-			// 页面加载时检查用户状态
-			this.checkUserStatus();
-			uni.request({
-				url: 'http://localhost:8080/user/1',
-				method: 'GET',
-				success: (res) => {
-					console.log(res)
-				}
-			})
+			this.checkLoginStatus();
 		}
 	};
 </script>

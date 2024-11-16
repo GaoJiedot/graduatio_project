@@ -6,32 +6,31 @@
 			<img src="/static/logo.png" alt="" />
 			<!-- 内容 -->
 			<view class="content">
-				<text>{{tabulatedata.tabulateName}}</text>
-
-				<view v-for="(tab, index) in tabulatedata.tabulateTabs" :key="index" class="clabal"
-					v-if="tabulatedata.tabulateType===0">
-					<!-- {{ordertab}} -->
-				</view>
+				<text>{{orderdata.orderName}}</text>
 
 			
-				<view class="price-container" v-if="tabulatedata.tabulateType===1">
-					<text class="price">¥{{tabulatedata.tabulatePrice}}</text>
+
+				<!-- 根据orderstate的值判断是否显示价格 -->
+				<view class="price-container" v-if="orderdata.orderStatus===1">
+					<text class="price">{{orderdata.orderPrice}}</text>
 				</view>
 			</view>
 		</view>
 
-		<view class="atime" v-if="tabulatedata.tabulateType===0">
+		<!-- 根据orderstate的值判断是否显示时间选择器 -->
+		<view class="atime" v-if="orderdata.orderStatus===0">
 			<timeSlotSelectorVue></timeSlotSelectorVue>
 		</view>
 
 
-		
-		<view class="touse" v-if="tabulatedata.tabulateType===1">
+		<!-- 根据orderstate的值判断是否显示预约按钮 -->
+		<view class="touse" v-if="orderdata.orderStatus===1">
 			<button class="appointment-btn">去预约</button>
 		</view>
 
 
-		<view class="used" v-if="tabulatedata.tabulateType===2">
+		<!-- 根据orderstate的值判断是否显示已使用状态 -->
+		<view class="used" v-if="orderdata.orderStatus===2">
 			<view class="used-status">
 				<text class="used-icon">✓</text>
 				<text>已使用</text>
@@ -45,22 +44,25 @@
 	import timeSlotSelectorVue from '../time-slot-selector/time-slot-selector.vue';
 	export default {
 		props: {
-			tabulatedata: {
-			
-				tabulateName: {
+			orderdata: {
+				orderId: {
+					type: Number,
+					required: true
+				},
+				orderPrice: {
+					type: Number,
+					required: true
+				},
+				orderName: {
 					type: String,
 					required: true
 				},
-				tabulateTabs: {
-					type: Array,
-					required: true
-				},
-				tabulateType: {
+				orderStatus: {
 					type: Number,
 					required: true
 
 				},
-				
+
 			}
 
 		},
@@ -74,11 +76,9 @@
 			}
 		},
 		methods: {
-			
-		},
-		mounted() {
-			
+
 		}
+
 
 	}
 </script>

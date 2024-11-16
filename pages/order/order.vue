@@ -1,6 +1,6 @@
 <template>
 	<view class="container">
-		<!-- 选项卡标题区域 -->
+
 		<view class="tab-header">
 			<view v-for="(item, index) in tabs" :key="index" :class="['tab-item', activeTab === index ? 'active' : '']"
 				@click="switchTab(index)">
@@ -8,58 +8,70 @@
 			</view>
 		</view>
 
-		<!-- 选项卡内容区域 -->
+		
 		<view class="tab-content">
-			<view v-for="(item, index) in selectionlist" :key="index" v-if="activeTab === 0" @click="toapp">
-				<listVue :Selectionlist="item" :orderstatus= 1></listVue>
+			<view v-for="(item, index) in orderdata" :key="index" v-if="activeTab === 0" @click="toapp">
+				<OrderListVue :orderdata="orderdata[index]" ></OrderListVue>
 			</view>
-			<view v-for="(item, index) in selectionlist" :key="index" v-if="activeTab === 1">
-				<listVue :Selectionlist="item" :orderstatus= 2></listVue>
+			<view v-for="(item, index) in orderdata" :key="index" v-if="activeTab === 1">
+				<OrderListVue :orderdata="orderdata[index]" ></OrderListVue>
 			</view>
-			</view>
-
-
 		</view>
+
+
+	</view>
 	</view>
 </template>
 <script>
-	import listVue from '../../component/list/list.vue';
-	export default {
-		components: {
-			listVue
-		},
-		data() {
-			return {
-				
-				
-				tabs: ['待使用', '已使用'], 
-				selectionlist: [{
-						id: "1",
-						name: "i1111s"
-					},
-					{
-						id: "2",
-						name: "i1111s"
-					}
-				],
-
-				activeTab: 0 
-			};
-		},
-		methods: {
-			switchTab(index) {
-				this.activeTab = index;
-				this.orderstate = index+1;
-				
-				
-			},
-			toapp() {
-				uni.navigateTo({
-					url: '/pages/appointment/appointment'
-				})
-		}
-	},
-	}
+import OrderListVue from '../../component/orderList/orderList.vue'
+export default {
+    components: {
+        OrderListVue
+    },
+    data() {
+        return {
+            tabs: ['待使用', '已使用'],
+            orderdata: [{
+                orderId: null,
+                orderTime: "",
+                orderPrice: null,
+                orderStatus: null,
+                orderType: null,
+                orderName: ""
+            }],
+            activeTab: 0
+        };
+    },
+    methods: {
+       
+        switchTab(index) {
+            this.activeTab = index;
+            this.fetchOrderData(index + 1);
+        },
+        toapp() {
+            uni.navigateTo({
+                url: '/pages/appointment/appointment'
+            })
+        },
+        fetchOrderData(status) {
+            uni.request({
+                url: `http://localhost:8080/order/status/${status}`,
+                method: 'GET',
+                success: (res) => {
+                    this.orderdata = res.data.data;
+                    console.log('获取到的数据:', this.orderdata);
+                },
+                fail: (err) => {
+                    console.error('Request failed:', err);
+                }
+            });
+        }
+    },
+    onLoad() {
+     
+        this.fetchOrderData(1);
+    }
+}
 </script>
 
 <style scoped lang="scss">
@@ -82,9 +94,9 @@
 
 		.tab-item.active {
 			color: #28aff6;
-			/* 选中状态颜色 */
+	
 			border-bottom: 2px solid #28aff6;
-			/* 下边框突出显示选中项 */
+		
 		}
 
 		.tab-content {

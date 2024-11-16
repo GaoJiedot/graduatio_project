@@ -38,6 +38,13 @@
 		methods: {
 			// 退出登录方法
 			eixtbtns() {
+				uni.removeStorage({
+					key: 'userInfo',
+					success: function (res) {
+						console.log('success');
+					}
+				});
+
 				uni.navigateTo({
 					url: "/pages/login/login"
 				});
