@@ -1,49 +1,93 @@
 <template>
 	<view class="container">
-
-		<view class="bglogin"><img
-				src="https://static.vecteezy.com/system/resources/previews/006/046/341/original/barbershop-logo-vintage-classic-style-salon-fashion-haircut-pomade-badge-icon-simple-minimalist-modern-barber-pole-razor-shave-scissor-razor-blade-retro-symbol-luxury-elegant-design-free-vector.jpg"
-				alt="" /></view>
+		<view class="bglogin">
+			<img src="https://static.vecteezy.com/system/resources/previews/006/046/341/original/barbershop-logo-vintage-classic-style-salon-fashion-haircut-pomade-badge-icon-simple-minimalist-modern-barber-pole-razor-shave-scissor-razor-blade-retro-symbol-luxury-elegant-design-free-vector.jpg"
+				alt="" />
+		</view>
 		<view class="content">
-
 			<view class="title">修改密码</view>
-
 			<view class="welcome-text">欢迎使用</view>
 
-
-			<view  class="userlogin">
+			<view class="userlogin">
 				<view class="uni-form-item uni-column">
 					<input class="uni-input" type="number" v-model="userName" placeholder="请输入手机号" />
 					<input class="uni-input" type="email" v-model="email" placeholder="请输入邮箱" />
 					<input class="uni-input" password type="text" v-model="password" placeholder="请输入新密码" />
-					<input class="uni-input" type="number" v-model="code" placeholder="请输入验证码" />
+					<view class="code-input-container">
+						<input class="uni-input code-input" type="number" v-model="code" placeholder="请输入验证码" />
+						<button class="code-btn" :disabled="countdown > 0" @click="sendcode">
+							{{ countdown > 0 ? `${countdown}秒后重试` : '发送验证码' }}
+						</button>
+					</view>
 				</view>
-				<text @click="sendcode">发送验证码</text>
-				<button class="login-btn" @click="login">修改</button>
+				<button class="login-btn" @click="updatePassword">修改</button>
 			</view>
-
-
-
 		</view>
 
 		<text class="tips">小程序由GJdot制作</text>
 	</view>
 </template>
-
 <script>
 	export default {
 		data() {
 			return {
 				userName: '',
-				email: '', 
-				password: '', 
-				code:null
+				email: '',
+				password: '',
+				code: '',
+				countdown: 0,
+				timer: null
 			};
 		},
+		beforeDestroy() {
+			if (this.timer) {
+				clearInterval(this.timer);
+			}
+		},
 		methods: {
-			sendcode() {
-
+			startCountdown() {
+				this.countdown = 60;
+				this.timer = setInterval(() => {
+					if (this.countdown > 0) {
+						this.countdown--;
+					} else {
+						clearInterval(this.timer);
+					}
+				}, 1000);
 			},
+
+			async sendcode() {
+				if (!this.validateEmail()) {
+					return;
+				}
+
+				try {
+					const result = await uni.request({
+						url: `http://localhost:8080/user/sendcode?email=${encodeURIComponent(this.email)}`,
+						method: 'GET'
+					});
+
+					if (result.statusCode === 200 && result.data.code === 200) {
+						uni.showToast({
+							title: '验证码已发送',
+							icon: 'success'
+						});
+						this.startCountdown();
+					} else {
+						uni.showToast({
+							title: result.data.message || '发送失败',
+							icon: 'error'
+						});
+					}
+				} catch (err) {
+					console.error('发送验证码错误:', err);
+					uni.showToast({
+						title: '发送失败',
+						icon: 'error'
+					});
+				}
+			},
+
 			validateUserName() {
 				const userNameRegex = /^1[3-9]\d{9}$/;
 				if (!userNameRegex.test(this.userName)) {
@@ -55,6 +99,7 @@
 				}
 				return true;
 			},
+
 			validatePassword() {
 				if (this.password.length < 6) {
 					uni.showToast({
@@ -65,6 +110,7 @@
 				}
 				return true;
 			},
+
 			validateEmail() {
 				const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 				if (!emailRegex.test(this.email)) {
@@ -76,8 +122,9 @@
 				}
 				return true;
 			},
+
 			validateCode() {
-				if (this.code.length !== 6) {
+				if (!this.code || this.code.length !== 6) {
 					uni.showToast({
 						title: '请输入正确的验证码',
 						icon: 'none'
@@ -86,34 +133,104 @@
 				}
 				return true;
 			},
-			login() {
-				if (!this.validateUserName() || !this.validatePassword() || !this.validateEmail() || !this
-				.validateCode()) {
+			async verifyCode() {
+				try {
+					const result = await uni.request({
+						url: `http://localhost:8080/user/verifycode`,
+						method: 'POST',
+						header: {
+							'Content-Type': 'application/x-www-form-urlencoded'
+						},
+						data: `email=${encodeURIComponent(this.email)}&code=${encodeURIComponent(this.code)}`
+					});
+					if (result.statusCode === 200) {
+						return result.data.code === 200;
+					} else {
+						uni.showToast({
+							title: result.data.message || '验证失败',
+							icon: 'none'
+						});
+						return false;
+					}
+				} catch (err) {
+					console.error('验证码校验错误:', err);
+					uni.showToast({
+						title: '验证码校验失败',
+						icon: 'error'
+					});
+					return false;
+				}
+			},
+
+			async updatePassword() {
+				if (!this.validateUserName() || !this.validatePassword() ||
+					!this.validateEmail() || !this.validateCode()) {
 					return;
 				}
 
+				const isCodeValid = await this.verifyCode();
+				if (!isCodeValid) {
+					uni.showToast({
+						title: '验证码无效或已过期',
+						icon: 'none'
+					});
+					return;
+				}
 
-				uni.request({
-					url: 'http://localhost:8080/user',
-					method: 'PUT',
-					success: res => {
-						if (res.data.code === 200)
-							uni.showToast({
-								title: '修改成功',
-								icon: 'success',
-								duration: 2000
-							})
-						else
-							uni.showToast({
-								title: '修改失败',
-								icon: 'error',
-								duration: 2000
-							})
+				try {
+					const checkUserResult = await uni.request({
+						url: `http://localhost:8080/user/username/${this.userName}`,
+						method: 'GET'
+					});
+
+					if (checkUserResult.data.code !== 200) {
+						uni.showToast({
+							title: '用户不存在',
+							icon: 'error'
+						});
+						return;
 					}
-				})
+
+					const updateResult = await uni.request({
+						url: 'http://localhost:8080/user/updatePassword',
+						method: 'PUT',
+						data: {
+							userName: this.userName,
+							email: this.email,
+							password: this.password
+						}
+					});
+
+					const updateRes = updateResult.data;
+
+					if (updateRes.code === 200) {
+						uni.showToast({
+							title: '密码修改成功',
+							icon: 'success'
+						});
+						// setTimeout(() => {
+						// 	uni.navigateTo({
+						// 		url:"/pages/login/login"
+						// 	})
+						// }, 1500);
+					} else {
+						uni.showToast({
+							title: updateRes.message || '修改失败',
+							icon: 'error'
+						});
+					}
+				} catch (err) {
+					console.error('操作失败:', err);
+					uni.showToast({
+						title: '操作失败',
+						icon: 'error'
+					});
+				}
 			}
+
+
 		}
-	};
+	}
 </script>
 
 <style lang="scss" scoped>
@@ -171,7 +288,7 @@
 					}
 				}
 
-				
+
 
 
 			}

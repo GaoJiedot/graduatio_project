@@ -1,6 +1,8 @@
 <template>
 	<view class="container">
-		<view class="bglogin"><img src="https://static.vecteezy.com/system/resources/previews/006/046/341/original/barbershop-logo-vintage-classic-style-salon-fashion-haircut-pomade-badge-icon-simple-minimalist-modern-barber-pole-razor-shave-scissor-razor-blade-retro-symbol-luxury-elegant-design-free-vector.jpg" alt="" /></view>
+		<view class="bglogin"><img
+				src="https://static.vecteezy.com/system/resources/previews/006/046/341/original/barbershop-logo-vintage-classic-style-salon-fashion-haircut-pomade-badge-icon-simple-minimalist-modern-barber-pole-razor-shave-scissor-razor-blade-retro-symbol-luxury-elegant-design-free-vector.jpg"
+				alt="" /></view>
 		<view class="content">
 
 			<view class="title">用户登录</view>
@@ -9,7 +11,7 @@
 
 			<view v-if="!userInfo" class="userlogin">
 				<view class="uni-form-item uni-column">
-					<input class="uni-input" type="number" v-model="useName" placeholder="请输入手机号" />
+					<input class="uni-input" type="number" v-model="userName" placeholder="请输入手机号" />
 					<input class="uni-input" password type="text" v-model="password" placeholder="请输入密码" />
 				</view>
 				<text class="forget" @click="forgetbtn">忘记密码</text>
@@ -19,10 +21,10 @@
 
 			<view v-if="userInfo" class="user-info">
 				<view class="avatar">
-					<text class="avatar-placeholder">{{ userInfo.useName.charAt(0) }}</text>
+					<text class="avatar-placeholder">{{ userInfo.userName.charAt(0) }}</text>
 				</view>
 				<view class="welcome-back">欢迎回来</view>
-				<view class="user-id">{{ userInfo.useName }}</view>
+				<view class="user-id">{{ userInfo.userName }}</view>
 			</view>
 		</view>
 		<text class="tips">小程序由GJdot制作</text>
@@ -33,7 +35,7 @@
 	export default {
 		data() {
 			return {
-				useName: '',
+				userName: '',
 				password: '',
 				userInfo: null
 			};
@@ -49,9 +51,9 @@
 					url: "/pages/register/register"
 				})
 			},
-			validateUseName() {
-				const useNameRegex = /^1[3-9]\d{9}$/;
-				if (!useNameRegex.test(this.useName)) {
+			validateUserName() {
+				const userNameRegex = /^1[3-9]\d{9}$/;
+				if (!userNameRegex.test(this.userName)) {
 					uni.showToast({
 						title: '请输入正确的手机号',
 						icon: 'none'
@@ -71,87 +73,82 @@
 				return true;
 			},
 			login() {
-			    if (!this.validateUseName() || !this.validatePassword()) {
-			        return;
-			    }
-			
-			    uni.showLoading({
-			        title: '登录中...'
-			    });
-			
-			    uni.request({
-			        url: 'http://localhost:8080/user/username/${this.userName}',
-			        method: 'GET',
-			        success: (res) => {
-			            if (res.data.code === 200 && res.data.data) {
-			             
-			                this.doLogin();
-			            } else {
-			                uni.showToast({
-			                    title: '用户不存在',
-			                    icon: 'none'
-			                });
-			                uni.hideLoading();
-			            }
-			        },
-			        fail: (err) => {
-			            uni.showToast({
-			                title: '网络错误，请稍后重试',
-			                icon: 'none'
-			            });
-			            uni.hideLoading();
-			        }
-			    });
-			},
-			
+				if (!this.validateUserName() || !this.validatePassword()) {
+					return;
+				}
+
+				uni.showLoading({
+					title: '登录中...'
+				});
+
+				uni.request({
+					url: `http://localhost:8080/user/username/${this.userName}`,
+					method: 'GET',
+					data: {
+						userName: this.userName, 
+						password: this.password
+					},	
+					success: (res) => {
+						console.log(res.data)
+						if (res.data.code === 200 && res.data.data) {
+							uni.request({
+								url: `http://localhost:8080/user/login`,
+								method: 'POST',
+								data: {
+									userName: this.userName,
+									password: this.password
+								},	
+								success: (res) => {
+									console.log(res.data)
+									if (res.data.code === 200 && res.data.data) {
+										const userInfo = {
+											userName: this.userName,
+											...res.data.data
+										};
+
+										uni.removeStorageSync('userInfo');
 		
-			doLogin() {
-			    uni.request({
-			        url: 'http://localhost:8080/user',  
-			        method: 'POST',
-			        data: {
-			            userName: this.useName,
-			            password: this.password
-			        },
-			        success: (res) => {
-			            if (res.data.code === 200 && res.data.data) {  
-			                const userInfo = {
-			                    useName: this.useName,
-			                    loginTime: new Date().getTime(),
-			                    ...res.data.data 
-			                };
-			
-			                uni.setStorageSync('userInfo', userInfo);
-			                this.userInfo = userInfo;
-			
-			                uni.showToast({
-			                    title: '登录成功',
-			                    icon: 'success'
-			                });
-			
-			                setTimeout(() => {
-			                    uni.switchTab({
-			                        url: "/pages/index/index"
-			                    });
-			                }, 1500);
-			            } else {
-			                uni.showToast({
-			                    title: res.data.message || '用户名或密码错误',
-			                    icon: 'none'
-			                });
-			            }
-			        },
-			        fail: (err) => {
-			            uni.showToast({
-			                title: '网络错误，请稍后重试',
-			                icon: 'none'
-			            });
-			        },
-			        complete: () => {
-			            uni.hideLoading();
-			        }
-			    });
+										uni.setStorageSync('userInfo', userInfo);
+										this.userInfo = userInfo;
+
+										uni.showToast({
+											title: '登录成功',
+											icon: 'success'
+										});
+
+										setTimeout(() => {
+											uni.switchTab({
+												url: "/pages/index/index"
+											});
+										}, 1500);
+									} else {
+										uni.showToast({
+											title:res.data.message,
+											icon: 'none'
+										});
+									}
+								},
+								
+							});
+
+						} else {
+							uni.showToast({
+								title:res.data.message,
+								icon: 'none'
+							});
+							uni.hideLoading();
+						}
+					},
+					fail: (err) => {
+						uni.showToast({
+							title: '网络错误，请稍后重试',
+							icon: 'none'
+						});
+						uni.hideLoading();
+					}
+				});
 			},
+
 
 			checkLoginStatus() {
 				const userInfo = uni.getStorageSync('userInfo');
