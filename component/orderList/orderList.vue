@@ -17,10 +17,7 @@
 			</view>
 		</view>
 
-		<!-- 根据orderstate的值判断是否显示时间选择器 -->
-		<view class="atime" v-if="orderdata.orderStatus===0">
-			<timeSlotSelectorVue></timeSlotSelectorVue>
-		</view>
+	
 
 
 		<!-- 根据orderstate的值判断是否显示预约按钮 -->

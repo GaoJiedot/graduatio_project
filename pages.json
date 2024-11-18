@@ -98,7 +98,7 @@
 			"style": {
 				"navigationBarTitleText": "导航"
 			}
-		}, 
+		},
 		{
 			"path": "pages/search-detail/search-detail",
 			"style": {
@@ -107,31 +107,27 @@
 
 		},
 		{
-			"path" : "pages/add/add",
-			"style" : 
-			{
-				"navigationBarTitleText" : "分享"
+			"path": "pages/add/add",
+			"style": {
+				"navigationBarTitleText": "分享"
 			}
 		},
 		{
-			"path" : "pages/forgetpage/forgetpage",
-			"style" : 
-			{
-				"navigationBarTitleText" : "修改密码"
+			"path": "pages/forgetpage/forgetpage",
+			"style": {
+				"navigationBarTitleText": "修改密码"
 			}
 		},
 		{
-			"path" : "pages/register/register",
-			"style" : 
-			{
-				"navigationBarTitleText" : "注册"
+			"path": "pages/register/register",
+			"style": {
+				"navigationBarTitleText": "注册"
 			}
 		},
 		{
-			"path" : "component/orderList/orderList",
-			"style" : 
-			{
-				"navigationBarTitleText" : ""
+			"path": "component/orderList/orderList",
+			"style": {
+				"navigationBarTitleText": ""
 			}
 		}
 
@@ -141,10 +137,17 @@
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "uni-app",
 		"navigationBarBackgroundColor": "#F8F8F8",
-		"backgroundColor": "#F8F8F8"
+		"backgroundColor": "#F8F8F8",
+		"usingComponents": {},
+		"mp-weixin": {
+			"resizable": true
+		}
 	},
 	"app-plus": {
-		"softinputMode": "adjustResize"
+		"softinputMode": "adjustResize",
+		"modules": {
+		            "VideoPlayer": {}
+		        }
 	},
 
 

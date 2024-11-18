@@ -1,8 +1,7 @@
 <template>
 	<view class="container">
 		<view class="bglogin">
-			<img src="https://static.vecteezy.com/system/resources/previews/006/046/341/original/barbershop-logo-vintage-classic-style-salon-fashion-haircut-pomade-badge-icon-simple-minimalist-modern-barber-pole-razor-shave-scissor-razor-blade-retro-symbol-luxury-elegant-design-free-vector.jpg"
-				alt="" />
+			<img src="static/ResourceFiles/bg1.jpg" alt="" />
 		</view>
 		<view class="content">
 			<view class="title">修改密码</view>
@@ -10,7 +9,7 @@
 
 			<view class="userlogin">
 				<view class="uni-form-item uni-column">
-					<input class="uni-input" type="number" v-model="userName" placeholder="请输入手机号" />
+					<input class="uni-input" type="number" v-model="userAccount" placeholder="请输入手机号" />
 					<input class="uni-input" type="email" v-model="email" placeholder="请输入邮箱" />
 					<input class="uni-input" password type="text" v-model="password" placeholder="请输入新密码" />
 					<view class="code-input-container">
@@ -31,7 +30,7 @@
 	export default {
 		data() {
 			return {
-				userName: '',
+				userAccount: '',
 				email: '',
 				password: '',
 				code: '',
@@ -88,9 +87,9 @@
 				}
 			},
 
-			validateUserName() {
-				const userNameRegex = /^1[3-9]\d{9}$/;
-				if (!userNameRegex.test(this.userName)) {
+			validateuserAccount() {
+				const userAccountRegex = /^1[3-9]\d{9}$/;
+				if (!userAccounteRegex.test(this.userAccount)) {
 					uni.showToast({
 						title: '请输入正确的手机号',
 						icon: 'none'
@@ -163,7 +162,7 @@
 			},
 
 			async updatePassword() {
-				if (!this.validateUserName() || !this.validatePassword() ||
+				if (!this.validateuserAccount() || !this.validatePassword() ||
 					!this.validateEmail() || !this.validateCode()) {
 					return;
 				}
@@ -179,7 +178,7 @@
 
 				try {
 					const checkUserResult = await uni.request({
-						url: `http://localhost:8080/user/username/${this.userName}`,
+						url: `http://localhost:8080/user/userAccount/${this.userAccount}`,
 						method: 'GET'
 					});
 
@@ -195,7 +194,7 @@
 						url: 'http://localhost:8080/user/updatePassword',
 						method: 'PUT',
 						data: {
-							userName: this.userName,
+							userAccount: this.userAccount,
 							email: this.email,
 							password: this.password
 						}
@@ -208,11 +207,11 @@
 							title: '密码修改成功',
 							icon: 'success'
 						});
-						// setTimeout(() => {
-						// 	uni.navigateTo({
-						// 		url:"/pages/login/login"
-						// 	})
-						// }, 1500);
+						setTimeout(() => {
+							uni.navigateTo({
+								url: "/pages/login/login"
+							})
+						}, 1500);
 					} else {
 						uni.showToast({
 							title: updateRes.message || '修改失败',

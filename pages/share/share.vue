@@ -1,7 +1,7 @@
 <template>
 	<view class="community-page">
 		<view class="add">
-			<img  class="addimg" src="/static/添加.png"  @click="addbtn">
+			<img  class="addimg" src="/static/icon/添加.png"  @click="addbtn">
 		</view>
 		<view v-for="post in posts" :key="post.id" class="post-card">
 			<view class="post-header">

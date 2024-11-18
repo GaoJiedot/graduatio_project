@@ -1,13 +1,13 @@
 <template>
 	<view class="container">
-		<view class="bglogin"><img src="https://static.vecteezy.com/system/resources/previews/006/046/341/original/barbershop-logo-vintage-classic-style-salon-fashion-haircut-pomade-badge-icon-simple-minimalist-modern-barber-pole-razor-shave-scissor-razor-blade-retro-symbol-luxury-elegant-design-free-vector.jpg" alt="" /></view>
+		<view class="bglogin"><img src="static/ResourceFiles/bg1.jpg" alt="" /></view>
 		<view class="content">
 			<view class="title">用户注册</view>
 			<view class="welcome-text">欢迎使用</view>
 
 			<view class="userlogin">
 				<view class="uni-form-item uni-column">
-					<input class="uni-input" type="number" v-model="userName" placeholder="请输入手机号" />
+					<input class="uni-input" type="number" v-model="userAccount" placeholder="请输入手机号" />
 					<input class="uni-input" password type="text" v-model="password" placeholder="请输入密码" />
 					<input class="uni-input" type="email" v-model="email" placeholder="请输入邮箱" />
 				</view>
@@ -23,15 +23,15 @@
 	export default {
 		data() {
 			return {
-				userName: '',
+				userAccount: '',
 				password: '',
 				email: ''
 			};
 		},
 		methods: {
-			validateUserName() {
-				const userNameRegex = /^1[3-9]\d{9}$/;
-				if (!userNameRegex.test(this.userName)) {
+			validateUserAccount() {
+				const userAccountRegex = /^1[3-9]\d{9}$/;
+				if (!userAccountRegex.test(this.userAccount)) {
 					uni.showToast({
 						title: '请输入正确的手机号',
 						icon: 'none'
@@ -64,7 +64,7 @@
 
 			register() {
 
-				if (!this.validateUserName() || !this.validatePassword() || !this.validateEmail()) {
+				if (!this.validateuserAccount() || !this.validatePassword() || !this.validateEmail()) {
 					return;
 				}
 
@@ -74,7 +74,7 @@
 
 
 				uni.request({
-					url: `http://localhost:8080/user/username/${this.userName}`, 
+					url: `http://localhost:8080/user/userAccount/${this.userAccount}`, 
 					method: 'GET',
 
 					success: (res) => {
@@ -97,7 +97,7 @@
 								url: 'http://localhost:8080/user',
 								method: 'POST',
 								data: {
-									userName: this.userName,
+									userAccount: this.userAccount,
 									password: this.password,
 									email: this.email
 								},

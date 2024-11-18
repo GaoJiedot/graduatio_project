@@ -2,7 +2,7 @@
 	<view class="container">
 		<view class="box">
 
-			<view class="searchbox" @click="search">
+			<view class="searchbox" >
 				<img class="searchicon" src="../../static/icon/搜索框.png" alt="" />
 				<input type="text" v-model="searchQuery" placeholder="请输入搜索" />
 				<img class="delicon" src="../../static/icon/清除.png" alt=""  @click="clearaway"/>
@@ -37,6 +37,7 @@
 
 <script>
 	export default {
+		
 		data() {
 			return {
 				searchQuery: "", // 搜索输入框内容
@@ -53,7 +54,7 @@
 			},
 			searchbtn(){
 				uni.navigateTo({
-					url:"/pages/search-detail/search-detail"
+					url:`/pages/search-detail/search-detail?searchQuery=${this.searchQuery}`
 				})
 			}
 			// clickhot(e){

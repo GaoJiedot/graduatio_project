@@ -1,8 +1,6 @@
 <template>
 	<view class="container">
-		<view class="bglogin"><img
-				src="https://static.vecteezy.com/system/resources/previews/006/046/341/original/barbershop-logo-vintage-classic-style-salon-fashion-haircut-pomade-badge-icon-simple-minimalist-modern-barber-pole-razor-shave-scissor-razor-blade-retro-symbol-luxury-elegant-design-free-vector.jpg"
-				alt="" /></view>
+		<view class="bglogin"><img src="static/ResourceFiles/bg1.jpg" alt="" /></view>
 		<view class="content">
 
 			<view class="title">用户登录</view>
@@ -11,7 +9,7 @@
 
 			<view v-if="!userInfo" class="userlogin">
 				<view class="uni-form-item uni-column">
-					<input class="uni-input" type="number" v-model="userName" placeholder="请输入手机号" />
+					<input class="uni-input" type="number" v-model="userAccount" placeholder="请输入手机号" />
 					<input class="uni-input" password type="text" v-model="password" placeholder="请输入密码" />
 				</view>
 				<text class="forget" @click="forgetbtn">忘记密码</text>
@@ -21,10 +19,10 @@
 
 			<view v-if="userInfo" class="user-info">
 				<view class="avatar">
-					<text class="avatar-placeholder">{{ userInfo.userName.charAt(0) }}</text>
+					<text class="avatar-placeholder">{{  }}</text>
 				</view>
 				<view class="welcome-back">欢迎回来</view>
-				<view class="user-id">{{ userInfo.userName }}</view>
+				<view class="user-id">{{ userInfo.userAccount }}</view>
 			</view>
 		</view>
 		<text class="tips">小程序由GJdot制作</text>
@@ -35,9 +33,10 @@
 	export default {
 		data() {
 			return {
-				userName: '',
+				userAccount: '',
 				password: '',
-				userInfo: null
+				userInfo: null,
+				userId:null
 			};
 		},
 		methods: {
@@ -51,9 +50,9 @@
 					url: "/pages/register/register"
 				})
 			},
-			validateUserName() {
-				const userNameRegex = /^1[3-9]\d{9}$/;
-				if (!userNameRegex.test(this.userName)) {
+			validateUserAccount() {
+				const userAccountRegex = /^1[3-9]\d{9}$/;
+				if (!userAccountRegex.test(this.userAccount)) {
 					uni.showToast({
 						title: '请输入正确的手机号',
 						icon: 'none'
@@ -73,7 +72,7 @@
 				return true;
 			},
 			login() {
-				if (!this.validateUserName() || !this.validatePassword()) {
+				if (!this.validateUserAccount() || !this.validatePassword()) {
 					return;
 				}
 
@@ -82,12 +81,12 @@
 				});
 
 				uni.request({
-					url: `http://localhost:8080/user/username/${this.userName}`,
+					url: `http://localhost:8080/user/userAccount/${this.userAccount}`,
 					method: 'GET',
 					data: {
-						userName: this.userName, 
+						userAccount: this.userAccount,
 						password: this.password
-					},	
+					},
 					success: (res) => {
 						console.log(res.data)
 						if (res.data.code === 200 && res.data.data) {
@@ -95,19 +94,19 @@
 								url: `http://localhost:8080/user/login`,
 								method: 'POST',
 								data: {
-									userName: this.userName,
+									userAccount: this.userAccount,
 									password: this.password
-								},	
+								},
 								success: (res) => {
 									console.log(res.data)
 									if (res.data.code === 200 && res.data.data) {
 										const userInfo = {
-											userName: this.userName,
+											userAccount: this.userAccount,
 											...res.data.data
 										};
 
 										uni.removeStorageSync('userInfo');
-		
+
 										uni.setStorageSync('userInfo', userInfo);
 										this.userInfo = userInfo;
 
@@ -123,17 +122,17 @@
 										}, 1500);
 									} else {
 										uni.showToast({
-											title:res.data.message,
+											title: res.data.message,
 											icon: 'none'
 										});
 									}
 								},
-								
+
 							});
 
 						} else {
 							uni.showToast({
-								title:res.data.message,
+								title: res.data.message,
 								icon: 'none'
 							});
 							uni.hideLoading();

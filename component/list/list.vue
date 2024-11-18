@@ -8,36 +8,21 @@
 			<view class="content">
 				<text>{{tabulatedata.tabulateName}}</text>
 
-				<view v-for="(tab, index) in tabulatedata.tabulateTabs" :key="index" class="clabal"
-					v-if="tabulatedata.tabulateType===0">
-					<!-- {{ordertab}} -->
+				<view v-for="(tab, index) in tabulatedata.tabulateTabs" :key="index" class="clabal">
+					
 				</view>
 
 			
-				<view class="price-container" v-if="tabulatedata.tabulateType===1">
-					<text class="price">¥{{tabulatedata.tabulatePrice}}</text>
-				</view>
+				
 			</view>
 		</view>
 
-		<view class="atime" v-if="tabulatedata.tabulateType===0">
+		<view class="atime" >
 			<timeSlotSelectorVue></timeSlotSelectorVue>
 		</view>
 
 
-		
-		<view class="touse" v-if="tabulatedata.tabulateType===1">
-			<button class="appointment-btn">去预约</button>
-		</view>
-
-
-		<view class="used" v-if="tabulatedata.tabulateType===2">
-			<view class="used-status">
-				<text class="used-icon">✓</text>
-				<text>已使用</text>
-				<text class="used-date">2024-11-12</text>
-			</view>
-		</view>
+	
 	</view>
 </template>
 
@@ -54,12 +39,7 @@
 				tabulateTabs: {
 					type: Array,
 					required: true
-				},
-				tabulateType: {
-					type: Number,
-					required: true
-
-				},
+				}
 				
 			}
 

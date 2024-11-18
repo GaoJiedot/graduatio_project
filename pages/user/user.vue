@@ -9,8 +9,8 @@
 					<image class="avatar" src="/static/logo.png" />
 					<!-- 用户详情 -->
 					<view class="user-details">
-						<text class="username">GJ</text>
-						<text class="user-id">[ID:200111]</text>
+						<text class="username">{{data.userName}}</text>
+						<text class="user-id">ID:{{data.userId}}</text>
 					</view>
 				</view>
 			</view>
@@ -31,7 +31,14 @@
 	export default {
 		data() {
 			return {
-				// 功能列表
+				data:{
+					email: "",
+					password: "",
+					userAccount: null,
+					userId:null,
+					userType: null,
+					userName: ""
+				},
 				func: ["个人信息", "免责条款"]
 			};
 		},
@@ -40,7 +47,7 @@
 			eixtbtns() {
 				uni.removeStorage({
 					key: 'userInfo',
-					success: function (res) {
+					success: (res)=> {
 						console.log('success');
 					}
 				});
@@ -71,12 +78,12 @@
 								}
 							}
 						});
-						
+
 						break;
 					case 2:
 						// 实现其他功能2的效果
 						console.log("功能1点击");
-						
+
 						break;
 					case 3:
 						console.log("功能2点击");
@@ -86,6 +93,15 @@
 						break;
 				}
 			}
+		},
+		onLoad() {
+			uni.getStorage({
+				key: 'userInfo',
+				success: (res) =>{
+					this.data=res.data;
+					console.log("获取到的数据:",this.data);
+				}
+			});
 		}
 	};
 </script>
