@@ -25,10 +25,20 @@
 			return {
 				userAccount: '',
 				password: '',
-				email: ''
+				email: '',
+				userAvatar: 'http://localhost:8080/avatar/1_edaf677a-d5bc-4be1-a3d3-79c2c5ea6963_avatars-23.png',
+
 			};
 		},
 		methods: {
+			generateRandomUserName() {
+				const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+				let randomName = '';
+				for (let i = 0; i < 8; i++) { // 生成8位长度的随机字符串
+					randomName += chars.charAt(Math.floor(Math.random() * chars.length));
+				}
+				return randomName;
+			},
 			validateUserAccount() {
 				const userAccountRegex = /^1[3-9]\d{9}$/;
 				if (!userAccountRegex.test(this.userAccount)) {
@@ -64,7 +74,7 @@
 
 			register() {
 
-				if (!this.validateuserAccount() || !this.validatePassword() || !this.validateEmail()) {
+				if (!this.validateUserAccount() || !this.validatePassword() || !this.validateEmail()) {
 					return;
 				}
 
@@ -74,12 +84,12 @@
 
 
 				uni.request({
-					url: `http://localhost:8080/user/userAccount/${this.userAccount}`, 
+					url: `http://localhost:8080/user/userAccount/${this.userAccount}`,
 					method: 'GET',
 
 					success: (res) => {
 						console.log(res.data)
-						if (res.data.code === 200) { 
+						if (res.data.code === 200) {
 							uni.showToast({
 								title: '账号已存在',
 								icon: 'none',
@@ -92,14 +102,90 @@
 							}, 2000);
 
 						} else if (res.data.code === 500) {
-							
+							const randomUserName = this.generateRandomUserName();
 							uni.request({
 								url: 'http://localhost:8080/user',
 								method: 'POST',
 								data: {
 									userAccount: this.userAccount,
 									password: this.password,
-									email: this.email
+									email: this.email,
+									userAvatar: this.userAvatar,
+									userName: randomUserName, 
+									userType:2
+								},
+								success: (res) => {
+									if (res.data.code === 200) {
+										uni.showToast({
+											title: '注册成功',
+											icon: 'success'
+										});
+										setTimeout(() => {
+											uni.navigateBack({
+												delta: 1
+											});
+										}, 2000);
+									} else {
+										uni.showToast({
+											title: res.data.message || '注册失败',
+											icon: 'none'
+										});
+									}
+								},
+								success: (res) => {
+									if (res.data.code === 200) {
+										uni.showToast({
+											title: '注册成功',
+											icon: 'success'
+										});
+										setTimeout(() => {
+											uni.navigateBack({
+												delta: 1
+											});
+										}, 2000);
+									} else {
+										uni.showToast({
+											title: res.data.message || '注册失败',
+											icon: 'none'
+										});
+									}
+								},
+								success: (res) => {
+									if (res.data.code === 200) {
+										uni.showToast({
+											title: '注册成功',
+											icon: 'success'
+										});
+										setTimeout(() => {
+											uni.navigateBack({
+												delta: 1
+											});
+										}, 2000);
+									} else {
+										uni.showToast({
+											title: res.data.message || '注册失败',
+											icon: 'none'
+										});
+									}
+
+								},
+								success: (res) => {
+									if (res.data.code === 200) {
+										uni.showToast({
+											title: '注册成功',
+											icon: 'success'
+										});
+										setTimeout(() => {
+											uni.navigateBack({
+												delta: 1
+											});
+										}, 2000);
+									} else {
+										uni.showToast({
+											title: res.data.message || '注册失败',
+											icon: 'none'
+										});
+									}
 								},
 								success: (res) => {
 									if (res.data.code === 200) {
@@ -127,7 +213,7 @@
 								},
 								complete: () => {
 									uni.hideLoading();
-								
+
 								}
 							});
 						} else {

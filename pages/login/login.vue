@@ -19,10 +19,10 @@
 
 			<view v-if="userInfo" class="user-info">
 				<view class="avatar">
-					<text class="avatar-placeholder">{{  }}</text>
+				<image class="avatar-placeholder" :src="userAvatar || '/static/icon/logo.png'" />
 				</view>
 				<view class="welcome-back">欢迎回来</view>
-				<view class="user-id">{{ userInfo.userAccount }}</view>
+				<view class="user-id">{{ userInfo.userName }}</view>
 			</view>
 		</view>
 		<text class="tips">小程序由GJdot制作</text>
@@ -36,6 +36,8 @@
 				userAccount: '',
 				password: '',
 				userInfo: null,
+				userName: '',
+				userAvatar: '',
 				userId:null
 			};
 		},
@@ -101,7 +103,6 @@
 									console.log(res.data)
 									if (res.data.code === 200 && res.data.data) {
 										const userInfo = {
-											userAccount: this.userAccount,
 											...res.data.data
 										};
 

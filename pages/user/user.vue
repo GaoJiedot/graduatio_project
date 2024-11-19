@@ -1,13 +1,9 @@
 <template>
 	<view class="container">
-		<!-- 用户信息盒子 -->
 		<view class="uersbox">
-			<!-- 用户信息 -->
 			<view class="user-info-box">
 				<view class="user-info">
-					<!-- 用户头像 -->
-					<image class="avatar" src="/static/logo.png" />
-					<!-- 用户详情 -->
+					<image class="avatar" :src="data.userAvatar || '/static/icon/logo.png'" />
 					<view class="user-details">
 						<text class="username">{{data.userName}}</text>
 						<text class="user-id">ID:{{data.userId}}</text>
@@ -15,14 +11,12 @@
 				</view>
 			</view>
 		</view>
-		<!-- 其他功能 -->
 		<view class="otherbox">
 			<view v-for="(item, index) in func" :key="index" class="other" @click="handleItemClick(index)">
 				{{item}}
 			</view>
 
 		</view>
-		<!-- 退出登录按钮 -->
 		<button class="exitbtn" @click="eixtbtns">退出登录</button>
 	</view>
 </template>
@@ -31,19 +25,19 @@
 	export default {
 		data() {
 			return {
-				data:{
-					email: "",
-					password: "",
-					userAccount: null,
-					userId:null,
-					userType: null,
-					userName: ""
+				data: {
+				    email: "",
+				    password: "",
+				    userAccount: null,
+				    userId: null,
+				    userType: null,
+				    userName: "",
+				    userAvatar: ""
 				},
 				func: ["个人信息", "免责条款"]
 			};
 		},
 		methods: {
-			// 退出登录方法
 			eixtbtns() {
 				uni.removeStorage({
 					key: 'userInfo',
@@ -56,11 +50,9 @@
 					url: "/pages/login/login"
 				});
 			},
-			// 处理点击不同的功能项
 			handleItemClick(index) {
 				switch (index) {
 					case 0:
-						// 跳转到账号信息页面
 						uni.navigateTo({
 							url: "/pages/account/account"
 						});
@@ -98,7 +90,16 @@
 			uni.getStorage({
 				key: 'userInfo',
 				success: (res) =>{
-					this.data=res.data;
+					this.data = res.data;
+					console.log("获取到的数据:",this.data);
+				}
+			});
+		},
+		onShow() {
+			uni.getStorage({
+				key: 'userInfo',
+				success: (res) =>{
+					this.data = res.data;
 					console.log("获取到的数据:",this.data);
 				}
 			});

@@ -38,7 +38,7 @@
 				data: [{
 					"tabulateId": null,
 					"tabulateName": "",
-					"tabulateTabs": "",
+					"tabulateTabs": [],
 					"tabulateType": null
 				}]
 			};
@@ -60,7 +60,12 @@
 				url: 'http://localhost:8080/tabulate/type/0',
 				method: 'GET',
 				success: (res) => {
-					this.data = res.data.data;
+					this.data = res.data.data.map(item =>{
+						return {
+								...item,
+								tabulateTabs: item.tabulateTabs ? item.tabulateTabs.split(',') : []
+							}
+					});
 					console.log(this.data);
 				},
 				fail: (err) => {

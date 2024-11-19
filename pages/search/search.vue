@@ -2,17 +2,18 @@
 	<view class="container">
 		<view class="box">
 
-			<view class="searchbox" >
+			<view class="searchbox">
 				<img class="searchicon" src="../../static/icon/搜索框.png" alt="" />
 				<input type="text" v-model="searchQuery" placeholder="请输入搜索" />
-				<img class="delicon" src="../../static/icon/清除.png" alt=""  @click="clearaway"/>
+				<img class="delicon" src="../../static/icon/清除.png" alt="" @click="clearaway" />
 				<button @click="searchbtn">搜索</button>
 			</view>
 		</view>
 		<view v-if="searchHistory.length > 0" class="history">
 			<view class="history-title">
 				<text>搜索历史</text>
-				<img src="../../static/icon/del2.png" alt="delete icon" class="icon delete-icon" @click="clearHistory" />
+				<img src="../../static/icon/del2.png" alt="delete icon" class="icon delete-icon"
+					@click="clearHistory" />
 			</view>
 			<view class="tags">
 				<view v-for="(record, index) in searchHistory" :key="index" class="tag">
@@ -37,30 +38,51 @@
 
 <script>
 	export default {
-		
+
 		data() {
 			return {
-				searchQuery: "", // 搜索输入框内容
-				searchHistory: ["go开发工程师", "考研", "石家庄", "石家庄职业技术学院", "河北大学", "河北师范大学"], // 搜索历史示例
-				hotSearchItems: ["手机", "电脑", "河南老君山", "三亚一游", "北京环球影城", "杭州西湖", "保定驴肉火烧", "保定狼牙山玻璃栈道"] // 热门搜索示例
+				
+					searchQuery: "",
+					searchHistory: ["go开发工程师", "考研", "石家庄", "石家庄职业技术学院", "河北大学", "河北师范大学"],
+					hotSearchItems: ["手机", "电脑", "河南老君山", "三亚一游", "北京环球影城", "杭州西湖", "保定驴肉火烧", "保定狼牙山玻璃栈道"]
+
+
 			};
 		},
 		methods: {
-			clearaway(){
-				this.searchQuery=""
+			clearaway() {
+				this.searchQuery = ""
 			},
 			clearHistory() {
-				this.searchHistory = []; // 清空搜索历史
+				this.searchHistory = [];
 			},
-			searchbtn(){
+			searchbtn() {
 				uni.navigateTo({
-					url:`/pages/search-detail/search-detail?searchQuery=${this.searchQuery}`
+					url: `/pages/search-detail/search-detail?searchQuery=${this.searchQuery}`
 				})
 			}
 			// clickhot(e){
 			// 	this.searchHistory=e.hotSearchItems
 			// }
-			
+		},
+		onLoad() {
+			uni.getStorage({
+				key: 'userInfo',
+				success: (res) =>{
+					this.data = res.data;
+					console.log("获取到的数据:",this.data);
+				}
+			});
+			uni.request({
+				url: `http://localhost:8080/search/history/${this.userId}`,
+				method: 'GET',
+				success: (res) => {
+					this.searchHistory=res.data.data.searchHistory
+					searchHistory: item.searchHistory ? item.searchHistory.split(',') : []
+
+					console.log(this.searchHistory)
+				}
+			})
 		}
 	};
 </script>
@@ -116,9 +138,9 @@
 
 					background-color: #ffffff;
 					color: skyblue;
-				
+
 					border: 5rpx solid skyblue;
-				
+
 					border-radius: 40rpx;
 					margin-left: 15rpx;
 
@@ -165,7 +187,8 @@
 		flex-wrap: wrap;
 		gap: 10rpx;
 	}
-	.tag{
+
+	.tag {
 		padding: 20rpx 30rpx;
 		background-color: #eeeeee;
 		color: #666;
