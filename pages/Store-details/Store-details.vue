@@ -87,12 +87,12 @@
 
 <script>
 	export default {
-		name: 'ShopDetails',
 		data() {
 			return {
 				
 				activeTab: 'all',
 				shop: {
+					shopId:null,
 					name: '03BarberShop理发工作室',
 					rating: 3.2,
 					businessHours: '周一至周日 12:00-21:00',
@@ -123,7 +123,7 @@
 						description: '不限发型师',
 						price: 73,
 						icon: 'https://api.r10086.com/%E5%9B%BE%E5%8C%85/P%E7%AB%99%E7%B3%BB%E5%88%971/75034270_p0.jpg'
-					},
+					}
 
 				]
 			}
@@ -139,6 +139,18 @@
 					url:"/pages/map/map"
 				})
 			}
+		},
+		onLoad(options) {
+			this.shop= options.shop
+			
+		
+			
+		},
+		onShow() {
+			uni.setNavigationBarTitle({
+				title: this.shopName
+			})
+			
 		},
 		computed: {
 			filteredServices() {

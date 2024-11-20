@@ -6,18 +6,18 @@
 				<img src="../../static/icon/搜索框.png" alt="" />
 			</view>
 		</view>
-		<!-- 轮播图 -->
-		<marginSwiperVue></marginSwiperVue>
-		<!-- 菜单 - 根据身份显示 -->
-		<menuVue></menuVue>
 
-		<!-- 为你推荐 -->
+		<marginSwiperVue></marginSwiperVue>
+
+		<menuVue :userInfo="userInfo"></menuVue>
+
+
 		<view class="mytext">
 			<text>为你推荐</text>
 		</view>
-		<!-- 循环渲染数据 -->
-		<view v-for="(item, index) in data " :key="index" class="list-item" @click="todeatils">
-			<listVue :tabulatedata="data[index]"></listVue>
+
+		<view v-for="(item, index) in data " :key="index" class="list-item" @click="todeatils(item)">
+			<listVue :tabulatedata="item"></listVue>
 		</view>
 	</view>
 </template>
@@ -35,12 +35,19 @@
 		},
 		data() {
 			return {
+				uesrInfo: {
+					userType: null
+				},
 				data: [{
-					"tabulateId": null,
-					"tabulateName": "",
-					"tabulateTabs": [],
-					"tabulateType": null
+					tabulateId: null,
+					tabulateName: "",
+					tabulateTabs: [],
+					tabulateType: null,
+					shop:{
+						shopId:null
+					}
 				}]
+
 			};
 		},
 		methods: {
@@ -49,9 +56,11 @@
 					url: "/pages/search/search"
 				});
 			},
-			todeatils() {
+			todeatils(e) {
+				console.log(e.shop)
 				uni.navigateTo({
-					url: "/pages/Store-details/Store-details"
+					url: `/pages/Store-details/Store-details?shop=${e.shop}`,
+					
 				});
 			}
 		},
@@ -60,18 +69,30 @@
 				url: 'http://localhost:8080/tabulate/type/0',
 				method: 'GET',
 				success: (res) => {
-					this.data = res.data.data.map(item =>{
+					this.data = res.data.data.map(item => {
 						return {
-								...item,
-								tabulateTabs: item.tabulateTabs ? item.tabulateTabs.split(',') : []
-							}
+							...item,
+							tabulateTabs: item.tabulateTabs ?
+								item.tabulateTabs.split(',') : []
+						};
 					});
+					this.shop=res.data.shopId
 					console.log(this.data);
 				},
 				fail: (err) => {
 					console.error('Request failed:', err);
 				}
 			});
+			uni.getStorage({
+				key: 'userInfo',
+				success: (res) => {
+					this.userInfo = res.data;
+					console.log(this.userInfo.userType);
+				},
+				fail: (err) => {
+					console.error('Get storage failed:', err);
+				}
+			})
 		}
 	};
 </script>

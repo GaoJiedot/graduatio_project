@@ -9,26 +9,26 @@
 				<button @click="searchbtn">搜索</button>
 			</view>
 		</view>
-		<view v-if="searchHistory.length > 0" class="history">
+		<view v-if="data.searchHistory.length > 0" class="history">
 			<view class="history-title">
 				<text>搜索历史</text>
 				<img src="../../static/icon/del2.png" alt="delete icon" class="icon delete-icon"
 					@click="clearHistory" />
 			</view>
 			<view class="tags">
-				<view v-for="(record, index) in searchHistory" :key="index" class="tag">
-					{{ record }}
+				<view v-for="(item, index) in data.searchHistory" :key="index" class="tag">
+					{{ item }}
 				</view>
 			</view>
 		</view>
 
 		<!-- 热门搜索区域 -->
-		<view class="hot-search">
+		<view class="hot-search" v-if="data.hotSearchItems.length > 0">
 			<view class="hot-title">
 				<text>热门搜索</text>
 			</view>
 			<view class="tags">
-				<view v-for="(item, index) in hotSearchItems" :key="index" class="tag" @click="clickhot">
+				<view v-for="(item, index) in data.hotSearchItems" :key="index" class="tag" @click="clickhot">
 					{{ item }}
 				</view>
 			</view>
@@ -41,11 +41,14 @@
 
 		data() {
 			return {
-				
-					searchQuery: "",
-					searchHistory: ["go开发工程师", "考研", "石家庄", "石家庄职业技术学院", "河北大学", "河北师范大学"],
-					hotSearchItems: ["手机", "电脑", "河南老君山", "三亚一游", "北京环球影城", "杭州西湖", "保定驴肉火烧", "保定狼牙山玻璃栈道"]
 
+				searchQuery: "",
+
+				data: {
+					searchHistory: [],
+					hotSearchItems: [],
+					userId: null
+				}
 
 			};
 		},
@@ -68,19 +71,26 @@
 		onLoad() {
 			uni.getStorage({
 				key: 'userInfo',
-				success: (res) =>{
-					this.data = res.data;
-					console.log("获取到的数据:",this.data);
+				success: (res) => {
+					this.data.userId = res.data.userId;
+					
 				}
 			});
 			uni.request({
-				url: `http://localhost:8080/search/history/${this.userId}`,
+				url: `http://localhost:8080/search/history/${this.data.userId}`,
 				method: 'GET',
 				success: (res) => {
-					this.searchHistory=res.data.data.searchHistory
-					searchHistory: item.searchHistory ? item.searchHistory.split(',') : []
-
-					console.log(this.searchHistory)
+					if (res.data.code === 200) {
+						this.data.searchHistory = res.data.data.searchHistory ?
+							res.data.data.searchHistory.split(',') :
+							[];
+						this.data.hotSearchItems = res.data.data.searchHot ?
+							res.data.data.searchHot.split(',') :
+							[];
+					} else {
+						this.data.searchHistory = [];
+						this.data.hotSearchItems = [];
+					}
 				}
 			})
 		}

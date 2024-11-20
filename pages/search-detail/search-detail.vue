@@ -19,9 +19,10 @@
 		</view> -->
 
 		<!-- 搜索结果列表 -->
-		<view class="searchresult" v-if="data.length">
+		<view class="searchresult" v-if="data.length >0">
 			<view class="searchresult-item" v-for="(item, index) in data" :key="index">
-				<listVue :tabulatedata="data[index]" /><!-- :distance="calculateDistance(item.latitude, item.longitude)" -->
+				<listVue :tabulatedata="item" />
+				<!-- :distance="calculateDistance(item.latitude, item.longitude)" -->
 			</view>
 		</view>
 		<view class="no-result" v-else-if="hasSearched">
@@ -43,12 +44,12 @@
 			return {
 				searchQuery: '',
 				data: [{
-					"tabulateId": null,
-					"tabulateName": "",
-					"tabulateTabs": "",
-					"tabulateType": null
+					tabulateId: null,
+					tabulateName: "",
+					tabulateTabs: "",
+					tabulateType: null
 				}],
-				
+
 				currentLocation: '',
 				hasSearched: false,
 				userLocation: {
@@ -64,7 +65,7 @@
 			clearaway() {
 				this.searchQuery = '';
 				this.searchResult = [];
-				this.hasSearched = false;
+				this.hasSearched = true;
 			},
 
 			searchbtn() {
@@ -155,43 +156,75 @@
 			// 		`${distance.toFixed(1)}km`;
 			// },
 
-			async handleSearch() {
-				if (!this.searchQuery.trim()) return;
-
-				try {
-					uni.showLoading({
-						title: '搜索中...'
-					});
-
-					const [err, res] = await uni.request({
-						url:  `http://localhost:8080/tabulate/search/${this.searchQuery}`,
-						method: 'GET',
-						data: {
-							searchQuery: this.searchQuery,
-							latitude: this.userLocation.latitude,
-							longitude: this.userLocation.longitude
-						}
-					});
-
-					if (err) {
-						throw new Error('搜索失败');
-					}
-
-					this.data = res.data.data;
-					this.hasSearched = true;
-				} catch (err) {
+			handleSearch() {
+				if (!this.searchQuery.trim()) {
 					uni.showToast({
-						title: '搜索失败，请重试',
+						title: '请输入有效的搜索关键词',
 						icon: 'none'
 					});
-				} finally {
-					uni.hideLoading();
+					return;
 				}
+
+				// if (!this.userLocation.latitude || !this.userLocation.longitude) {
+				// 	uni.showToast({
+				// 		title: '未获取到位置信息',
+				// 		icon: 'none'
+				// 	});
+				// 	return;
+				// }
+
+				uni.showLoading({
+					title: '搜索中...'
+				});
+
+				const url = `http://localhost:8080/tabulate/search/${encodeURIComponent(this.searchQuery)}`;
+				console.log('请求 URL:', url);
+
+				uni.request({
+					url: url,
+					method: 'GET',
+					data: {
+						latitude: this.userLocation.latitude,
+						longitude: this.userLocation.longitude
+					},
+					success: (res) => {
+						console.log('后端返回的数据:', res.data);
+						if (res.data && res.data.data && res.data.data.length > 0) {
+							this.data = res.data.data.map(item => ({
+								...item,
+								tabulateTabs: item.tabulateTabs ? item.tabulateTabs.split(',') : []
+							}));
+						} else {
+							this.data = [];
+						}
+						this.hasSearched = true;
+					},
+					fail: (err) => {
+						console.error('请求失败:', err);
+						uni.showToast({
+							title: '搜索失败，请稍后重试',
+							icon: 'none'
+						});
+					},
+					complete: () => {
+						uni.hideLoading();
+					}
+				});
+			},
+
+			// 跳转到详情页
+			gotoDetail(id) {
+				uni.navigateTo({
+					url: `/pages/detail/detail?id=${id}`
+				});
+
+
 			}
 		},
 		onLoad(options) {
-			
-		    this.searchQuery = options.searchQuery|| '';
+
+			this.searchQuery = options.searchQuery || '';
+			this.handleSearch()
 		}
 	}
 </script>

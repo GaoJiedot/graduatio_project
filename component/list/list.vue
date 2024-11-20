@@ -11,9 +11,6 @@
 				<view v-for="(tab, index) in tabulatedata.tabulateTabs" :key="index" class="clabal">
 					{{tab}}
 				</view>
-
-			
-				
 			</view>
 		</view>
 
@@ -49,7 +46,8 @@
 		},
 		data() {
 			return {
-
+					tabulateName: '',
+					tabulateTabs: []
 
 			}
 		},
