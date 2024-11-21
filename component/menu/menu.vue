@@ -3,7 +3,7 @@
 
 		<view class="menu" v-if="userInfo.userType===0">
 
-			<view v-for="(item, index) in adminMenulist" :key="index" class="item">
+			<view v-for="(item, index) in adminMenulist" :key="index" class="item" @click="handleAdminMenu(index)">
 
 				<image :src="item.img" alt="" />
 
@@ -12,7 +12,8 @@
 		</view>
 		<view class="menu" v-if="userInfo.userType===1">
 
-			<view v-for="(item, index) in marketersMenulist" :key="index" class="item">
+			<view v-for="(item, index) in marketersMenulist" :key="index" class="item"
+				@click="handleMarketersMenu(index)">
 
 				<image :src="item.img" alt="" />
 
@@ -31,15 +32,16 @@
 
 		props: {
 			userInfo: {
-				userType: {
-					type: Number,
-					default: 0
-				}
+				type: Object, // 修改为对象类型
+				default: () => ({
+					userType: 0,
+					shopId: 0
+				})
 			}
-	},
-	data() {
+		},
+		data() {
 			return {
-
+				shopStatus: 0,
 				adminMenulist: [{
 						img: "/static/menuicon/用户.png",
 						menutext: "用户管理"
@@ -62,8 +64,8 @@
 						menutext: "店铺管理"
 					},
 					{
-						img: "/static/menuicon/商品.png",
-						menutext: "商品管理"
+						img: "/static/menuicon/完成.png",
+						menutext: ''
 					},
 					{
 						img: "/static/menuicon/更多.png",
@@ -77,7 +79,94 @@
 
 			};
 		},
-		methods: {}
+		methods: {
+
+			handleAdminMenu(index) {
+				switch (index) {
+					case 0:
+						uni.navigateTo({
+							url: '/pages/user-management/user-management'
+						});
+						break;
+					case 1:
+						uni.navigateTo({
+							url: '/pages/merchant-management/merchant-management'
+						});
+						break;
+					default:
+						uni.showToast({
+							title: '功能开发中',
+							icon: 'none'
+						});
+				}
+			},
+			handleMarketersMenu(index) {
+				switch (index) {
+					case 0:
+						uni.navigateTo({
+							url: '/pages/shop-management/shop-management'
+						});
+						break;
+					case 1:
+						this.handleShopStatusToggle()
+						
+						break;
+					default:
+						uni.showToast({
+							title: '功能开发中',
+							icon: 'none'
+						});
+				}
+			},
+			switchShopStatus() {
+				if (this.shopStatus === 0) {
+					this.marketersMenulist[1].menutext = "一键下班";
+					this.shopStatus = 1;
+				} else {
+					this.marketersMenulist[1].menutext = "一键上班";
+					this.shopStatus = 0;
+				} 
+			},
+			handleShopStatusToggle() {
+				uni.request({
+					url: `http://localhost:8080/shop/status`,
+					method: 'PATCH',	
+					data: {
+						shopId: this.userInfo.shopId,
+						shopStatus: this.shopStatus
+					},
+					success: (res) => {
+						uni.showToast({
+							title: res.data.message,
+							icon: 'success',
+							duration:2000,
+							mask:true
+						});
+						this.switchShopStatus();
+					},
+					fail: (err) => {
+						console.error('切换店铺状态失败', err);
+					}
+				});
+			}
+		},
+		created() {
+			uni.request({
+				url: `http://localhost:8080/shop/${this.userInfo.shopId}`,
+				method: 'GET',
+				success: (res) => {
+					this.shopStatus = res.data.shopStatus;
+					this.switchShopStatus();
+				},
+				fail: (err) => {
+					console.error('获取店铺状态失败', err);
+				}
+			});
+		},
+		onShow() {
+			this.switchShopStatus();
+		}
+
 	};
 </script>
 

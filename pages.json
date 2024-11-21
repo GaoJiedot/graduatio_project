@@ -129,6 +129,34 @@
 			"style": {
 				"navigationBarTitleText": ""
 			}
+		},
+		{
+			"path" : "pages/user-management/user-management",
+			"style" : 
+			{
+				"navigationBarTitleText" : "用户管理"
+			}
+		},
+		{
+			"path" : "pages/merchant-management/merchant-management",
+			"style" : 
+			{
+				"navigationBarTitleText" : "商家管理"
+			}
+		},
+		{
+			"path" : "pages/shop-management/shop-management",
+			"style" : 
+			{
+				"navigationBarTitleText" : "店铺管理"
+			}
+		},
+		{
+			"path" : "pages/product-management/product-management",
+			"style" : 
+			{
+				"navigationBarTitleText" : "商品管理"
+			}
 		}
 
 

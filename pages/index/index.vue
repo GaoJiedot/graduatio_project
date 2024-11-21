@@ -35,17 +35,15 @@
 		},
 		data() {
 			return {
-				uesrInfo: {
-					userType: null
-				},
+				uesrInfo: {},
 				data: [{
 					tabulateId: null,
 					tabulateName: "",
 					tabulateTabs: [],
 					tabulateType: null,
-					shop:{
+					shop:[{
 						shopId:null
-					}
+					}]
 				}]
 
 			};
@@ -57,11 +55,12 @@
 				});
 			},
 			todeatils(e) {
-				console.log(e.shop)
-				uni.navigateTo({
-					url: `/pages/Store-details/Store-details?shop=${e.shop}`,
-					
-				});
+				const shopInfo = JSON.stringify(e.shopId);
+				    
+				    uni.navigateTo({
+				        url: `/pages/Store-details/Store-details?shop=${encodeURIComponent(shopInfo)}`,
+				    });
+				
 			}
 		},
 		onLoad() {
@@ -76,21 +75,22 @@
 								item.tabulateTabs.split(',') : []
 						};
 					});
-					this.shop=res.data.shopId
-					console.log(this.data);
+					
 				},
 				fail: (err) => {
-					console.error('Request failed:', err);
+				},
+				fail: (err) => {
 				}
 			});
 			uni.getStorage({
 				key: 'userInfo',
 				success: (res) => {
-					this.userInfo = res.data;
-					console.log(this.userInfo.userType);
+					this.userInfo = res.data
+					console.log(this.userInfo)
 				},
 				fail: (err) => {
-					console.error('Get storage failed:', err);
+				},
+				fail: (err) => {
 				}
 			})
 		}

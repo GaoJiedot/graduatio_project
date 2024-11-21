@@ -29,7 +29,7 @@
 			<swiper-item>
 				<view class="swiper-item">
 					<image 
-						src="/static/khl20240930232745242.png"
+						src="/static/ResourceFiles/bg1.jpg"
 						mode="aspectFill"
 						@error="handleImageError"
 					></image>
