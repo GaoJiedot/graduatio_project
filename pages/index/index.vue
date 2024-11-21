@@ -36,17 +36,8 @@
 		data() {
 			return {
 				uesrInfo: {},
-				data: [{
-					tabulateId: null,
-					tabulateName: "",
-					tabulateTabs: [],
-					tabulateType: null,
-					shop:[{
-						shopId:null
-					}]
-				}]
-
-			};
+				data: []
+				}
 		},
 		methods: {
 			search() {

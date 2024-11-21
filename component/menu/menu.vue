@@ -96,7 +96,9 @@
 					default:
 						uni.showToast({
 							title: '功能开发中',
-							icon: 'none'
+							icon: 'none',
+							duration:1500,
+							mask:true
 						});
 				}
 			},
@@ -114,7 +116,9 @@
 					default:
 						uni.showToast({
 							title: '功能开发中',
-							icon: 'none'
+							icon: 'none',
+							duration:1500,
+							mask:true
 						});
 				}
 			},

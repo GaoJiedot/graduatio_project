@@ -24,7 +24,7 @@
 		<!-- 商店信息 -->
 		<view class="shop-info">
 			<view class="logo-container">
-				<image :src="shop.shoplogo" :alt="shop.name" class="shop-logo" />
+				<image :src="shop.shopLogo" :alt="shop.name" class="shop-logo" />
 			</view>
 
 			<view class="details">
@@ -33,7 +33,7 @@
 				<!-- 评分组件 -->
 				<view class="rating-stars">
 					<text v-for="index in 5" :key="index" class="star"
-						:class="{ active: index <= Math.floor(shop.rating) }" @click="updateRating(index)">★</text>
+						:class="{ active: index <= Math.floor(shop.shopRating) }" @click="updateRating(index)">★</text>
 					<text class="rating-score">{{ shop.shopRating }}</text>
 				</view></br>
 				<text class="business-hours">{{ shop.shopBusinessHours }}</text>
@@ -91,19 +91,7 @@
 			return {
 
 				activeTab: 'all',
-				shop: {
-					shopId: null,
-					shopName: '03BarberShop理发工作室',
-					shopRating: 3.2,
-					shopBusinessHours: '周一至周日 12:00-21:00',
-					shopAddress: '东渡路29号世贸中心大厦16楼A16',
-					shopLogo: 'https://api.r10086.com/%E5%9B%BE%E5%8C%85/P%E7%AB%99%E7%B3%BB%E5%88%971/75034270_p0.jpg',
-					shopImages: [
-						'',
-						'https://api.r10086.com/%E5%9B%BE%E5%8C%85/P%E7%AB%99%E7%B3%BB%E5%88%971/75034270_p0.jpg',
-						'https://api.r10086.com/%E5%9B%BE%E5%8C%85/P%E7%AB%99%E7%B3%BB%E5%88%971/75034270_p0.jpg'
-					]
-				},
+				shop: {},
 				tabs: [{
 						id: 'all',
 						name: '全部'
@@ -143,13 +131,6 @@
 		onLoad(options) {
 			const shopInfo = JSON.parse(decodeURIComponent(options.shop));
 			this.shop = shopInfo;
-			console.log(this.shop);
-			console.log(this.shop.shopName);
-			console.log(this.shop.shopRating);
-			console.log(this.shop.shopBusinessHours);
-			console.log(this.shop.shopAddress);
-			console.log(this.shop.shopLogo);
-			console.log(this.shop.shopImages);
 
 
 

@@ -1,29 +1,18 @@
 <!-- 店铺管理页面 -->
 <template>
     <view class="shop-management-container">
-        <!-- 顶部导航 -->
-        <view class="nav-header">
-            <view class="back-icon">
-                <image src="/static/icon/back.png" mode="aspectFit"></image>
-            </view>
-            <text class="page-title">店铺管理</text>
-            <view class="add-icon">
-                <image src="/static/icon/add.png" mode="aspectFit"></image>
-            </view>
-        </view>
 
-        <!-- 店铺信息卡片 -->
         <view class="shop-card">
             <view class="shop-avatar">
-                <image src="/static/icon/shop-default.png" mode="aspectFill"></image>
+                <image :src="shopInfo.shopLogo" mode="aspectFill"></image>
             </view>
             <view class="shop-info">
-                <text class="shop-name">{{ shopInfo.name }}</text>
-                <text class="shop-desc">{{ shopInfo.description }}</text>
+                <text class="shop-name">{{ shopInfo.shopName }}</text>
+                <text class="shop-desc">{{ shopInfo.shopDescription }}</text>
             </view>
             <view class="shop-status">
-                <text :class="['status-tag', shopInfo.status === 1 ? 'active' : 'inactive']">
-                    {{ shopInfo.status === 1 ? '营业中' : '已关店' }}
+                <text :class="['status-tag', shopInfo.shopStatus === 0 ? 'active' : 'inactive']">
+                    {{ shopInfo.shopStatus === 0 ? '营业中' : '已关店' }}
                 </text>
             </view>
         </view>
@@ -32,26 +21,26 @@
         <view class="shop-details">
             <view class="detail-item">
                 <text class="label">联系电话</text>
-                <text class="value">{{ shopInfo.phone }}</text>
+                <text class="value">{{ shopInfo.shopPhone }}</text>
             </view>
             <view class="detail-item">
                 <text class="label">营业时间</text>
-                <text class="value">{{ shopInfo.businessHours }}</text>
+                <text class="value">{{ shopInfo.shopBusinessHours }}</text>
             </view>
             <view class="detail-item">
                 <text class="label">店铺地址</text>
-                <text class="value">{{ shopInfo.address }}</text>
+                <text class="value">{{ shopInfo.shopAddress }}</text>
             </view>
         </view>
 
         <!-- 快捷操作 -->
         <view class="quick-actions">
-            <view class="action-item">
-                <image src="/static/icon/edit.png" mode="aspectFit"></image>
+            <view class="action-item" @click="editShopInfo">
+                <image src="/static/menuicon/设置.png" mode="aspectFit"></image>
                 <text>编辑信息</text>
             </view>
-            <view class="action-item">
-                <image src="/static/icon/product.png" mode="aspectFit" @click="goToProductManagement"></image>
+            <view class="action-item" @click="goToProductManagement">
+                <image src="/static/menuicon/商品.png" mode="aspectFit" ></image>
                 <text>商品管理</text>
             </view>
            
@@ -64,14 +53,8 @@
 export default {
     data() {
         return {
-            shopInfo: {
-                name: '美味小厨',
-                description: '新鲜美味，值得品尝',
-                phone: '13800138000',
-                businessHours: '10:00 - 22:00',
-                address: '广东省深圳市南山区科技园',
-                status: 1
-            }
+			userInfo: {},
+            shopInfo: {}
         }
     },
     methods: {
@@ -86,8 +69,32 @@ export default {
             uni.navigateTo({
                  url: '/pages/product-management/product-management'
             })
-        }
-    }
+        },
+		getshopInfo(){
+			uni.request({
+				url: `http://localhost:8080/shop/${this.userInfo.shopId}`,
+					method: 'GET',
+					success: (res) => {
+						this.shopInfo = res.data.data
+						console.log(this.shopInfo)
+					}
+			})
+    },
+	onLoad() {
+		uni.getStorage({
+			key: 'userInfo',
+			success: (res) => {
+				this.userInfo = res.data
+				console.log(this.userInfo.shopId)
+				
+			}
+		}),
+		this.getshopInfo()
+		},
+		onShow() {
+			this.getshopInfo()
+		}
+	}
 }
 </script>
 

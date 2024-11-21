@@ -16,9 +16,10 @@
 						:autoplay="false"
 						:loop="true"
 						:muted="true"
+						:enable-danmu="false"
+						:danmu-btn="false"
 						:controls="true"
 						:show-center-play-btn="true"
-						:show-mute-btn="true"
 						@error="handleVideoError"
 						@loaded="handleVideoLoaded"
 						

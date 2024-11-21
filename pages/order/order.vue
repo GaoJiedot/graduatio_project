@@ -31,14 +31,7 @@ export default {
     data() {
         return {
             tabs: ['待使用', '已使用'],
-            orderdata: [{
-                orderId: null,
-                orderTime: "",
-                orderPrice: null,
-                orderStatus: null,
-                orderType: null,
-                orderName: ""
-            }],
+            orderdata: [],
             activeTab: 0
         };
     },

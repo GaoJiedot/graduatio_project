@@ -25,15 +25,7 @@
 	export default {
 		data() {
 			return {
-				data: {
-				    email: "",
-				    password: "",
-				    userAccount: null,
-				    userId: null,
-				    userType: null,
-				    userName: "",
-				    userAvatar: ""
-				},
+				data: {},
 				func: ["个人信息", "免责条款"]
 			};
 		},

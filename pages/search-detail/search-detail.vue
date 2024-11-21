@@ -43,12 +43,7 @@
 
 			return {
 				searchQuery: '',
-				data: [{
-					tabulateId: null,
-					tabulateName: "",
-					tabulateTabs: "",
-					tabulateType: null
-				}],
+				data: [],
 
 				currentLocation: '',
 				hasSearched: false,

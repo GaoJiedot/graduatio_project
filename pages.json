@@ -157,6 +157,20 @@
 			{
 				"navigationBarTitleText" : "商品管理"
 			}
+		},
+		{
+			"path" : "pages/edit-shop/edit-shop",
+			"style" : 
+			{
+				"navigationBarTitleText" : "编辑信息"
+			}
+		},
+		{
+			"path" : "pages/edit-user/edit-user",
+			"style" : 
+			{
+				"navigationBarTitleText" : "修改用户"
+			}
 		}
 
 
