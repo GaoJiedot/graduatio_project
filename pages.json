@@ -171,6 +171,13 @@
 			{
 				"navigationBarTitleText" : "修改用户"
 			}
+		},
+		{
+			"path" : "pages/merchant-details/merchant-details",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
 		}
 
 

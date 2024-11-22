@@ -5,7 +5,7 @@
 
 			<view v-for="(item, index) in adminMenulist" :key="index" class="item" @click="handleAdminMenu(index)">
 
-				<image :src="item.img" alt="" />
+				<image :src="item.img" alt=""  class="_img"/>
 
 				<text>{{ item.menutext }}</text>
 			</view>
@@ -32,13 +32,14 @@
 
 		props: {
 			userInfo: {
-				type: Object, // 修改为对象类型
+				type: Object,
 				default: () => ({
 					userType: 0,
 					shopId: 0
-				})
-			}
+				}),
+			},
 		},
+
 		data() {
 			return {
 				shopStatus: 0,
@@ -97,8 +98,8 @@
 						uni.showToast({
 							title: '功能开发中',
 							icon: 'none',
-							duration:1500,
-							mask:true
+							duration: 1500,
+							mask: true
 						});
 				}
 			},
@@ -111,14 +112,14 @@
 						break;
 					case 1:
 						this.handleShopStatusToggle()
-						
+
 						break;
 					default:
 						uni.showToast({
 							title: '功能开发中',
 							icon: 'none',
-							duration:1500,
-							mask:true
+							duration: 1500,
+							mask: true
 						});
 				}
 			},
@@ -129,12 +130,12 @@
 				} else {
 					this.marketersMenulist[1].menutext = "一键上班";
 					this.shopStatus = 0;
-				} 
+				}
 			},
 			handleShopStatusToggle() {
 				uni.request({
 					url: `http://localhost:8080/shop/status`,
-					method: 'PATCH',	
+					method: 'PATCH',
 					data: {
 						shopId: this.userInfo.shopId,
 						shopStatus: this.shopStatus
@@ -143,8 +144,8 @@
 						uni.showToast({
 							title: res.data.message,
 							icon: 'success',
-							duration:2000,
-							mask:true
+							duration: 2000,
+							mask: true
 						});
 						this.switchShopStatus();
 					},
@@ -155,20 +156,27 @@
 			}
 		},
 		created() {
-			uni.request({
-				url: `http://localhost:8080/shop/${this.userInfo.shopId}`,
-				method: 'GET',
-				success: (res) => {
-					this.shopStatus = res.data.shopStatus;
-					this.switchShopStatus();
-				},
-				fail: (err) => {
-					console.error('获取店铺状态失败', err);
-				}
-			});
+		  if (this.userInfo && this.userInfo.shopId != null) {
+		    uni.request({
+		      url: `http://localhost:8080/shop/${this.userInfo.shopId}`,
+		      method: 'GET',
+		      success: (res) => {
+		        this.shopStatus = res.data.shopStatus;
+		        this.switchShopStatus();
+		      },
+		      fail: (err) => {
+		        console.error('获取店铺状态失败', err);
+		      }
+		    });
+		  } else {
+		    console.error('userInfo 未定义或无效');
+		  }
 		},
+
 		onShow() {
 			this.switchShopStatus();
+			console.log(this.userInfo)
+			console.log(this.shopStatus)
 		}
 
 	};

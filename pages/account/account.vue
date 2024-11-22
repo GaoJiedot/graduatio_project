@@ -55,6 +55,7 @@
 						filePath: this.tempFilePath,
 						name: 'file',
 						success: (uploadRes) => {
+							console.log(uploadRes.data);
 							try {
 								const result = JSON.parse(uploadRes.data);
 								if (result.code === 200) {
@@ -78,6 +79,9 @@
 					uni.request({
 						url: 'http://localhost:8080/user',
 						method: 'PUT',
+						header: {
+							'Content-Type': 'application/json'
+						},
 						data: updateData,
 						success: (res) => {
 							if (res.data.code === 200) {

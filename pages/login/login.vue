@@ -103,7 +103,13 @@
 									console.log(res.data)
 									if (res.data.code === 200 && res.data.data) {
 										const userInfo = {
-											...res.data.data
+											...res.data.data,
+											token: res.data.data.token,
+											userName: res.data.data.userName,
+											userAvatar: res.data.data.userAvatar,
+											userId: res.data.data.userId,
+											loginTime: new Date().getTime()
+											
 										};
 
 										uni.removeStorageSync('userInfo');
@@ -169,6 +175,8 @@
 			}
 		},
 		onLoad() {
+			let token = uni.getStorageSync('token');
+        
 			this.checkLoginStatus();
 		}
 	};

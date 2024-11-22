@@ -1,334 +1,356 @@
 <template>
-    <view class="merchant-management-container">
-        <!-- 顶部搜索和筛选 -->
-        <view class="search-bar">
-            <view class="search-input">
-                <image src="/static/icon/search.png" class="search-icon"></image>
-                <input 
-                    placeholder="搜索商家名称/联系人" 
-                    confirm-type="search"
-                    @confirm="searchMerchants"
-                />
-            </view>
-            <view class="filter-icon">
-                <image src="/static/icon/filter.png"></image>
-            </view>
-        </view>
+	<view class="merchant-management-container">
+		<view class="page-header">
+			<view class="header-actions">
+				<input class="search-input" placeholder="搜索用户名/手机号" confirm-type="search" v-model="searchQuery"
+					@confirm="searchUsers" />
+				<button class="searchuser" @click="searchshops">搜索</button>
+			</view>
+		</view>
+		<scroll-view scroll-y class="merchant-list">
+			<view v-for="(merchant, index) in merchantList" :key="index" class="merchant-card">
+				<view class="merchant-header">
+					<view class="merchant-avatar">
+						<image :src="merchant.shopLogo" mode="aspectFill"></image>
+					</view>
+					<view class="merchant-basic-info">
+						<text class="merchant-name">{{ merchant.shopName}}</text>
+						<text class="merchant-contact">{{ merchant.shopKeeper }}</text>
+					</view>
+					<view class="merchant-status">
+						<text :class="['status-tag', merchant.shopStatus === 0 ? 'active' : 'blocked']">
+							{{ merchant.shopStatus === 0 ? '营业中' :'已休息'}}
+						</text>
+					</view>
+				</view>
 
-        <!-- 商家列表 -->
-        <scroll-view scroll-y class="merchant-list">
-            <view 
-                v-for="(merchant, index) in merchantList" 
-                :key="index" 
-                class="merchant-card"
-            >
-                <view class="merchant-header">
-                    <view class="merchant-avatar">
-                        <image :src="merchant.avatar" mode="aspectFill"></image>
-                    </view>
-                    <view class="merchant-basic-info">
-                        <text class="merchant-name">{{ merchant.name }}</text>
-                        <text class="merchant-contact">{{ merchant.contactPerson }}</text>
-                    </view>
-                    <view class="merchant-status">
-                        <text 
-                            :class="[
-                                'status-tag', 
-                                merchant.status === 1 ? 'active' : 
-                                merchant.status === 0 ? 'pending' : 'blocked'
-                            ]"
-                        >
-                            {{ 
-                                merchant.status === 1 ? '正常' : 
-                                merchant.status === 0 ? '审核中' : '已封禁'
-                            }}
-                        </text>
-                    </view>
-                </view>
+				<view class="merchant-details">
+					<view class="detail-item">
+						<text class="label">联系电话</text>
+						<text class="value">{{ merchant.shopPhone}}</text>
+					</view>
+				</view>
 
-                <view class="merchant-details">
-                    <view class="detail-item">
-                        <text class="label">联系电话</text>
-                        <text class="value">{{ merchant.phone }}</text>
-                    </view>
-                    <view class="detail-item">
-                        <text class="label">店铺数量</text>
-                        <text class="value">{{ merchant.shopCount }}家</text>
-                    </view>
-                    <view class="detail-item">
-                        <text class="label">注册时间</text>
-                        <text class="value">{{ merchant.registerDate }}</text>
-                    </view>
-                </view>
-
-                <view class="merchant-actions">
-                    <view 
-                        class="action-btn detail"
-                        @click="viewMerchantDetails(merchant)"
-                    >
-                        查看详情
-                    </view>
-                    <view 
-                        class="action-btn manage"
-                        @click="manageMerchant(merchant)"
-                    >
-                        {{ merchant.status === 1 ? '管理' : '审核' }}
-                    </view>
-                </view>
-            </view>
-        </scroll-view>
-
-        <!-- 悬浮添加商家按钮 -->
-        <view class="float-add-btn" @click="addNewMerchant">
-            <image src="/static/icon/添加 (1).png" mode="aspectFit"></image>
-        </view>
-    </view>
+				<view class="merchant-actions">
+					<view class="action-btn detail" @click="viewMerchantDetails(merchant)">
+						编辑信息
+					</view>
+					<view class="action-btn manage" @click="manageMerchant(merchant)">
+						下架店铺
+					</view>
+				</view>
+			</view>
+		</scroll-view>
+	</view>
 </template>
 
 <script>
-export default {
-    data() {
-        return {
-            merchantList: [
-                {
-                    id: 1,
-                    name: '美味餐饮集团',
-                    contactPerson: '张三',
-                    phone: '13800138000',
-                    avatar: '/static/avatar/merchant1.png',
-                    status: 1, // 1-正常 0-审核中 2-已封禁
-                    shopCount: 5,
-                    registerDate: '2023-06-15'
-                },
-                {
-                    id: 2,
-                    name: '快乐小吃店',
-                    contactPerson: '李四',
-                    phone: '13911139111',
-                    avatar: '/static/avatar/merchant2.png',
-                    status: 0,
-                    shopCount: 1,
-                    registerDate: '2023-09-22'
-                }
-                // 更多商家数据
-            ]
-        }
-    },
-    methods: {
-        // 搜索商家
-        searchMerchants(e) {
-            const keyword = e.detail.value;
-            // 执行搜索逻辑
-            console.log('搜索关键词:', keyword);
-        },
+	export default {
+		data() {
+			return {
+				merchantList: [],
+				searchQuery: ''
+			}
+		},
+		methods: {
 
-        // 查看商家详情
-        viewMerchantDetails(merchant) {
-            uni.navigateTo({
-                url: `/pages/merchant-details/merchant-details?merchantId=${merchant.id}`
-            });
-        },
+			getShop() {
+				uni.request({
+					url: `http://localhost:8080/shop/admin/all`,
+					method: 'GET',
+					success: (res) => {
+						this.merchantList = res.data.data
+						console.log(res.data.data)
 
-        // 管理或审核商家
-        manageMerchant(merchant) {
-            if (merchant.status === 1) {
-                // 正常状态，进入管理页面
-                uni.navigateTo({
-                    url: `/pages/merchant-manage/merchant-manage?merchantId=${merchant.id}`
-                });
-            } else {
-                // 审核状态
-                uni.navigateTo({
-                    url: `/pages/merchant-audit/merchant-audit?merchantId=${merchant.id}`
-                });
-            }
-        },
+					}
+				})
+			},
+			viewMerchantDetails(merchant) {
+				uni.navigateTo({
+					url: `/pages/merchant-details/merchant-details?merchantId=${merchant.id}`
+				});
+			},
 
-        // 添加新商家
-        addNewMerchant() {
-            uni.navigateTo({
-                url: '/pages/add-merchant/add-merchant'
-            });
-        }
-    }
-}
+			// 管理或审核商家
+			manageMerchant(merchant) {
+				
+					
+			},
+			searchshops() {
+				if (!this.searchQuery.trim()) {
+					uni.showToast({
+						title: '请输入搜索手机号',
+						icon: 'none'
+					});
+					return;
+				}
+				uni.request({
+					url: `http://localhost:8080/shop/shop/${this.searchQuery}`,
+					method: 'GET',
+					data: {
+						query: this.searchQuery,
+						page: this.currentPage,
+						limit: this.pageSize
+					},
+					success: (res) => {
+						console.log(res.data.data);
+					},
+					fail: (err) => {
+						console.error('搜索用户失败:', err);
+						uni.showToast({
+							title: '请求失败，请检查网络',
+							icon: 'none'
+						});
+					}
+				});
+			}
+		},
+		onLoad() {
+			this.getShop()
+		}
+	}
 </script>
 
 <style lang="scss" scoped>
-.merchant-management-container {
-    width:auto;
-    background-color: #f5f5f5;
-    padding: 30rpx;
-    position: relative;
+	.merchant-management-container {
+		width: auto;
+		background-color: #f5f5f5;
+		padding: 30rpx;
+		position: relative;
 
-    // 搜索栏
-    .search-bar {
-        display: flex;
-        align-items: center;
-        margin-bottom: 30rpx;
+		.page-header {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			margin-bottom: 30rpx;
 
-        .search-input {
-            flex-grow: 1;
-            background-color: white;
-            border-radius: 30rpx;
-            display: flex;
-            align-items: center;
-            padding: 10rpx 20rpx;
-            margin-right: 20rpx;
+			.header-actions {
+				display: flex;
+				align-items: center;
 
-            .search-icon {
-                width: 40rpx;
-                height: 40rpx;
-                margin-right: 10rpx;
-            }
+				.search-input {
+					border: 1px solid #ccc;
+					border-radius: 20rpx;
+					padding: 10rpx 15rpx;
+					width: 300rpx;
+					font-size: 28rpx;
+					background-color: #fff;
+					box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
+					transition: border 0.3s;
+					margin-right: 10rpx;
 
-            input {
-                flex-grow: 1;
-                font-size: 30rpx;
-            }
-        }
+					&:focus {
+						border: 1px solid #4CAF50;
+					}
+				}
 
-        .filter-icon {
-            image {
-                width: 50rpx;
-                height: 50rpx;
-            }
-        }
-    }
+				.searchuser,
+				.delete-selected {
+					padding: 10rpx 20rpx;
+					background-color: #4CAF50;
+					color: #fff;
+					border-radius: 20rpx;
+					margin-left: 10rpx;
+					cursor: pointer;
+					box-shadow: 0 2rpx 6rpx rgba(76, 175, 80, 0.3);
+					transition: all 0.3s;
+					font-size: 24rpx;
 
-    // 商家列表
-    .merchant-list {
+					&:hover {
+						background-color: #45a049;
+						box-shadow: 0 4rpx 10rpx rgba(76, 175, 80, 0.4);
+					}
+				}
+			}
+		}
 
-        .merchant-card {
-            background-color: white;
-            border-radius: 20rpx;
-            padding: 20rpx;
-            margin-bottom: 20rpx;
-            box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.1);
+		// 搜索栏
+		.search-bar {
+			display: flex;
+			align-items: center;
+			margin-bottom: 30rpx;
 
-            // 商家头部
-            .merchant-header {
-                display: flex;
-                align-items: center;
-                margin-bottom: 20rpx;
+			.search-input {
+				flex-grow: 1;
+				background-color: white;
+				border-radius: 30rpx;
+				display: flex;
+				align-items: center;
+				justify-self: center;
+				padding: 10rpx 20rpx;
+				margin-right: 20rpx;
 
-                .merchant-avatar {
-                    image {
-                        width: 100rpx;
-                        height: 100rpx;
-                        border-radius: 50%;
-                        margin-right: 20rpx;
-                    }
-                }
+				.search-icon {
+					width: 40rpx;
+					height: 40rpx;
+					margin-right: 10rpx;
+				}
 
-                .merchant-basic-info {
-                    flex-grow: 1;
-                    display: flex;
-                    flex-direction: column;
+				input {
+					flex-grow: 1;
+					font-size: 30rpx;
+				}
 
-                    .merchant-name {
-                        font-size: 36rpx;
-                        font-weight: bold;
-                    }
+				.searchshop {
+					padding: 10rpx 20rpx;
+					background-color: #4CAF50;
+					color: #fff;
+					border-radius: 20rpx;
+					margin-left: 10rpx;
+					cursor: pointer;
+					box-shadow: 0 2rpx 6rpx rgba(76, 175, 80, 0.3);
+					transition: all 0.3s;
+					font-size: 24rpx;
 
-                    .merchant-contact {
-                        font-size: 28rpx;
-                        color: #666;
-                        margin-top: 5rpx;
-                    }
-                }
+					&:hover {
+						background-color: #45a049;
+						box-shadow: 0 4rpx 10rpx rgba(76, 175, 80, 0.4);
+					}
+				}
+			}
 
-                .merchant-status {
-                    .status-tag {
-                        padding: 5rpx 15rpx;
-                        border-radius: 10rpx;
-                        font-size: 24rpx;
+			.filter-icon {
+				image {
+					width: 50rpx;
+					height: 50rpx;
+				}
+			}
+		}
 
-                        &.active {
-                            background-color: #e6f3ea;
-                            color: #4CAF50;
-                        }
+		// 商家列表
+		.merchant-list {
 
-                        &.pending {
-                            background-color: #fff3e0;
-                            color: #FF9800;
-                        }
+			.merchant-card {
+				background-color: white;
+				border-radius: 20rpx;
+				padding: 20rpx;
+				margin-bottom: 20rpx;
+				box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.1);
 
-                        &.blocked {
-                            background-color: #fde6e6;
-                            color: #f44336;
-                        }
-                    }
-                }
-            }
+				// 商家头部
+				.merchant-header {
+					display: flex;
+					align-items: center;
+					margin-bottom: 20rpx;
 
-            // 商家详细信息
-            .merchant-details {
-                border-top: 1rpx solid #eee;
-                border-bottom: 1rpx solid #eee;
-                padding: 20rpx 0;
-                margin-bottom: 20rpx;
+					.merchant-avatar {
+						image {
+							width: 100rpx;
+							height: 100rpx;
+							border-radius: 50%;
+							margin-right: 20rpx;
+						}
+					}
 
-                .detail-item {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-bottom: 10rpx;
+					.merchant-basic-info {
+						flex-grow: 1;
+						display: flex;
+						flex-direction: column;
 
-                    .label {
-                        color: #666;
-                        font-size: 30rpx;
-                    }
+						.merchant-name {
+							font-size: 36rpx;
+							font-weight: bold;
+						}
 
-                    .value {
-                        color: #333;
-                        font-size: 32rpx;
-                    }
-                }
-            }
+						.merchant-contact {
+							font-size: 28rpx;
+							color: #666;
+							margin-top: 5rpx;
+						}
+					}
 
-            // 操作按钮
-            .merchant-actions {
-                display: flex;
-                justify-content: space-between;
+					.merchant-status {
+						.status-tag {
+							padding: 5rpx 15rpx;
+							border-radius: 10rpx;
+							font-size: 24rpx;
 
-                .action-btn {
-                    flex-grow: 1;
-                    text-align: center;
-                    padding: 15rpx;
-                    border-radius: 10rpx;
-                    font-size: 32rpx;
-                    margin: 0 10rpx;
+							&.active {
+								background-color: #e6f3ea;
+								color: #4CAF50;
+							}
 
-                    &.detail {
-                        background-color: #2196F3;
-                        color: white;
-                    }
+							&.pending {
+								background-color: #fff3e0;
+								color: #FF9800;
+							}
 
-                    &.manage {
-                        background-color: #4CAF50;
-                        color: white;
-                    }
-                }
-            }
-        }
-    }
-	.float-add-btn {
-	        position: fixed;
-	        bottom: 50rpx;
-	        right: 50rpx;
-	        width: 100rpx;
-	        height: 100rpx;
-	        background-color: #4CAF50;
-	        border-radius: 50%;
-	        display: flex;
-	        justify-content: center;
-	        align-items: center;
-	        box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.2);
-	
-	        image {
-	            width: 50rpx;
-	            height: 50rpx;
-	        }
-	    }
-}
+							&.blocked {
+								background-color: #fde6e6;
+								color: #f44336;
+							}
+						}
+					}
+				}
+
+				// 商家详细信息
+				.merchant-details {
+					border-top: 1rpx solid #eee;
+					border-bottom: 1rpx solid #eee;
+					padding: 20rpx 0;
+					margin-bottom: 20rpx;
+
+					.detail-item {
+						display: flex;
+						justify-content: space-between;
+						margin-bottom: 10rpx;
+
+						.label {
+							color: #666;
+							font-size: 30rpx;
+						}
+
+						.value {
+							color: #333;
+							font-size: 32rpx;
+						}
+					}
+				}
+
+				// 操作按钮
+				.merchant-actions {
+					display: flex;
+					justify-content: space-between;
+
+					.action-btn {
+						flex-grow: 1;
+						text-align: center;
+						padding: 15rpx;
+						border-radius: 10rpx;
+						font-size: 32rpx;
+						margin: 0 10rpx;
+
+						&.detail {
+							background-color: #2196F3;
+							color: white;
+						}
+
+						&.manage {
+							background-color: #4CAF50;
+							color: white;
+						}
+					}
+				}
+			}
+		}
+
+		.float-add-btn {
+			position: fixed;
+			bottom: 50rpx;
+			right: 50rpx;
+			width: 100rpx;
+			height: 100rpx;
+			background-color: #4CAF50;
+			border-radius: 50%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.2);
+
+			image {
+				width: 50rpx;
+				height: 50rpx;
+			}
+		}
+	}
 </style>

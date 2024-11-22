@@ -24,7 +24,7 @@
 
 <script>
 	import listVue from '../../component/list/list.vue';
-	import menuVue from 'component/menu/menu.vue';
+	import menuVue from '../../component/menu/menu.vue';
 	import marginSwiperVue from 'component/margin-swiper/margin-swiper.vue';
 
 	export default {
@@ -35,7 +35,10 @@
 		},
 		data() {
 			return {
-				uesrInfo: {},
+				userInfo: {
+				      userType: 0,
+				      shopId: 1
+				    },
 				data: []
 				}
 		},
@@ -78,8 +81,6 @@
 				success: (res) => {
 					this.userInfo = res.data
 					console.log(this.userInfo)
-				},
-				fail: (err) => {
 				},
 				fail: (err) => {
 				}
