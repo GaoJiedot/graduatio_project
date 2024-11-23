@@ -3,7 +3,7 @@
 		<!-- 第一个盒子 -->
 		<view class="box1">
 			<!-- 图片 -->
-			<img src="/static/logo.png" alt="" />
+			<img src="tabulatedata.tabulateImage" alt="" />
 			<!-- 内容 -->
 			<view class="content">
 				<text>{{tabulatedata.tabulateName}}</text>
@@ -35,6 +35,10 @@
 				},
 				tabulateTabs: {
 					type: Array,
+					required: true
+				},
+				tabulateImage: {
+					type: String,
 					required: true
 				}
 				

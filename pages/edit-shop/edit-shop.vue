@@ -2,37 +2,26 @@
 	<view class="edit-shop-container">
 		<view class="nav-header">
 			<text class="page-title">您的店铺信息:</text>
-			<view class="save-icon" @click="saveShopInfo">
-				<text>保存</text>
-			</view>
 		</view>
 
 		<view class="edit-form">
-			<!-- Logo上传 -->
 			<view class="form-item">
 				<text class="label">店铺Logo:</text>
-				<view class="upload-logo" @click="chooseLogoImage">
-					<image 
-						:src="shopInfo.shopLogo || '/static/default-logo.png'" 
-						mode="aspectFill"
-					></image>
-					<text class="upload-tips">点击上传Logo</text>
+				<view class="upload-logo" @click="chooseImage('logo')">
+					<image :src="shopInfo.shopLogo" mode="aspectFill"></image>
+					<text class="upload-tips">点击上传</text>
 				</view>
 			</view>
 
-			<!-- 背景图上传 -->
 			<view class="form-item">
-				<text class="label">店铺背景:</text>
-				<view class="upload-background" @click="chooseShopImages">
-					<image 
-						:src="shopInfo.ShopImages || '/static/default-background.png'" 
-						mode="aspectFill"
-					></image>
+				<text class="label">店铺背景图:</text>
+				<view class="upload-background" @click="chooseImage('background')">
+					<image :src="shopInfo.shopImages" mode="aspectFill">
+					</image>
 					<text class="upload-tips">点击上传背景</text>
 				</view>
 			</view>
 
-			<!-- 原有表单项 -->
 			<view class="form-item">
 				<text class="label">店铺名称:</text>
 				<input class="input-field" v-model="shopInfo.shopName" placeholder="请输入店铺名称" />
@@ -40,41 +29,28 @@
 
 			<view class="form-item">
 				<text class="label">店铺描述:</text>
-				<textarea 
-					class="textarea-field" 
-					v-model="shopInfo.shopDescription" 
-					placeholder="简单介绍您的店铺" 
-					maxlength="200"
-				></textarea>
+				<textarea class="textarea-field" v-model="shopInfo.shopDescription" placeholder="简单介绍您的店铺"
+					maxlength="200"></textarea>
 			</view>
 
 			<view class="form-item">
 				<text class="label">联系电话:</text>
-				<input 
-					class="input-field" 
-					v-model="shopInfo.shopPhone" 
-					type="number" 
-					placeholder="请输入联系电话" 
-				/>
+				<input class="input-field" v-model="shopInfo.shopPhone" type="number" placeholder="请输入联系电话" />
 			</view>
 
 			<view class="form-item">
 				<text class="label">营业时间:</text>
-				<input 
-					class="input-field" 
-					v-model="shopInfo.shopBusinessHours" 
-					placeholder="例如：09:00-22:00" 
-				/>
+				<input class="input-field" v-model="shopInfo.shopBusinessHours" placeholder="例如：09:00-22:00" />
 			</view>
 
 			<view class="form-item">
 				<text class="label">店铺地址:</text>
-				<input 
-					class="input-field" 
-					v-model="shopInfo.shopAddress" 
-					placeholder="请输入详细地址" 
-				/>
+				<input class="input-field" v-model="shopInfo.shopAddress" placeholder="请输入详细地址" />
 			</view>
+		</view>
+		<view class="submit-btn" @click="saveShopInfo">
+			<text>提交</text>
+		</view>
 		</view>
 	</view>
 </template>
@@ -93,157 +69,114 @@ export default {
 				shopBusinessHours: '',
 				shopAddress: ''
 			},
-			logoTempFilePath: '',
-			backgroundTempFilePath: ''
+			tempLogoPath: '',
+			tempBackgroundPath: ''
 		}
 	},
 	methods: {
-		// 选择Logo图片
-		chooseLogoImage() {
+		chooseImage(type) {
 			uni.chooseImage({
 				count: 1,
 				sizeType: ['compressed'],
 				sourceType: ['album', 'camera'],
 				success: (res) => {
-					this.logoTempFilePath = res.tempFilePaths[0];
-					this.shopInfo.shopLogo = this.logoTempFilePath;
-				}
-			});
-		},
-
-		// 选择背景图片
-		chooseShopImages() {
-			uni.chooseImage({
-				count: 1,
-				sizeType: ['compressed'],
-				sourceType: ['album', 'camera'],
-				success: (res) => {
-					this.backgroundTempFilePath = res.tempFilePaths[0];
-					this.shopInfo.ShopImages = this.backgroundTempFilePath;
-				}
-			});
-		},
-
-		// Logo上传方法
-		uploadLogo() {
-			return new Promise((resolve, reject) => {
-				if (!this.logoTempFilePath) {
-					resolve(null);
-					return;
-				}
-
-				uni.uploadFile({
-					url: `http://localhost:8080/shop/uploadLogo`,
-					filePath: this.logoTempFilePath,
-					name: 'file',
-					success: (res) => {
-						try {
-							const result = JSON.parse(res.data);
-							if (result.code === 200) {
-								resolve(result.data);
-							} else {
-								reject(new Error(result.message || 'Logo上传失败'));
-							}
-						} catch (e) {
-							reject(e);
-						}
-					},
-					fail: (err) => {
-						reject(err);
+					if (type === 'logo') {
+						this.tempLogoPath = res.tempFilePaths[0];
+						this.shopInfo.shopLogo = this.tempLogoPath;
+					} else if (type === 'background') {
+						this.tempBackgroundPath = res.tempFilePaths[0];
+						this.shopInfo.shopImages = this.tempBackgroundPath;
 					}
-				});
-			});
-		},
-
-		// 背景图上传方法
-		uploadBackground() {
-			return new Promise((resolve, reject) => {
-				if (!this.backgroundTempFilePath) {
-					resolve(null);
-					return;
 				}
-
-				uni.uploadFile({
-					url: `http://localhost:8080/shop/uploadShopImages`,
-					filePath: this.backgroundTempFilePath,
-					name: 'file',
-					success: (res) => {
-						try {
-							const result = JSON.parse(res.data);
-							if (result.code === 200) {
-								resolve(result.data);
-							} else {
-								reject(new Error(result.message || '背景图上传失败'));
-							}
-						} catch (e) {
-							reject(e);
-						}
-					},
-					fail: (err) => {
-						reject(err);
-					}
-				});
 			});
 		},
 
-		// 保存店铺信息
-		async saveShopInfo() {
-			// 表单验证
-			if (!this.validateForm()) return;
+		async uploadFile(filePath, type) {
+			if (!filePath) return null;
 
 			try {
-				// 上传Logo
-				const logoResult = await this.uploadLogo();
-				if (logoResult) {
-					this.shopInfo.shopLogo = logoResult;
-				}
+				const uploadUrl = type === 'logo' 
+					? `http://localhost:8080/shop/uploadShopLogo/${this.userInfo.shopId}`
+					: `http://localhost:8080/shop/uploadShopImages/${this.userInfo.shopId}`;
 
-				// 上传背景图
-				const backgroundResult = await this.uploadBackground();
-				if (backgroundResult) {
-					this.shopInfo.ShopImages = backgroundResult;
-				}
-
-				// 保存店铺信息
-				uni.request({
-					url: `http://localhost:8080/shop`,
+				const res = await uni.uploadFile({
+					url: uploadUrl,
 					method: 'PUT',
-					data: this.shopInfo,
-					success: (res) => {
-						if (res.data.code === 200) {
-							uni.showToast({
-								title: '保存成功',
-								icon: 'success'
-							});
-							setTimeout(() => {
-								uni.navigateBack();
-							}, 1500);
-						} else {
-							uni.showToast({
-								title: res.data.message || '保存失败',
-								icon: 'none'
-							});
-						}
-					},
-					fail: () => {
+					filePath: filePath,
+					name: 'file'
+				});
+				
+				const result = JSON.parse(res.data);
+				if (result.code === 200) {
+					return result.data;
+				} else {
+					throw new Error(result.message || '上传失败');
+				}
+			} catch (e) {
+				console.error(e);
+				uni.showToast({
+					title: '上传失败',
+					icon: 'none'
+				});
+				return null;
+			}
+		},
+
+		async saveShopInfo() {
+			if (!this.validateForm()) return;
+
+			if (this.tempLogoPath) {
+				const uploadedLogo = await this.uploadFile(this.tempLogoPath, 'logo');
+				if (uploadedLogo) {
+					this.shopInfo.shopLogo = uploadedLogo;
+				}
+			}
+			if (this.tempBackgroundPath) {
+				const uploadedBackground = await this.uploadFile(this.tempBackgroundPath, 'background');
+				if (uploadedBackground) {
+					this.shopInfo.shopImages = uploadedBackground;
+				}
+			}
+
+			// 保存店铺信息
+			uni.request({
+				url: `http://localhost:8080/shop/update`,
+				method: 'PUT',
+				data: {
+					...this.shopInfo,
+					shopId: this.userInfo.shopId
+				},
+				success: (res) => {
+					if (res.data.code === 200) {
+						uni.showToast({
+							title: '保存成功',
+							icon: 'success'
+						});
+						setTimeout(() => {
+							uni.navigateBack();
+						}, 1500);
+					} else {
 						uni.showToast({
 							title: '保存失败',
 							icon: 'none'
 						});
 					}
-				});
-			} catch (error) {
-				console.error('处理图片上传时发生错误:', error);
-				uni.showToast({
-					title: error.message || '处理图片上传失败',
-					icon: 'none'
-				});
-			}
+				},
+				fail: () => {
+					uni.showToast({
+						title: '保存失败',
+						icon: 'none'
+					});
+				}
+			});
 		},
 
-		// 表单验证
 		validateForm() {
-			const { shopName, shopPhone, shopAddress } = this.shopInfo;
+			const {
+				shopName,
+				shopPhone,
+				shopAddress
+			} = this.shopInfo;
 
 			if (!shopName) {
 				uni.showToast({
@@ -273,13 +206,11 @@ export default {
 		}
 	},
 	onLoad() {
-		// 获取用户信息
 		uni.getStorage({
 			key: 'userInfo',
 			success: (res) => {
 				this.userInfo = res.data;
 
-				// 获取当前店铺信息
 				uni.request({
 					url: `http://localhost:8080/shop/${this.userInfo.shopId}`,
 					method: 'GET',
@@ -292,86 +223,142 @@ export default {
 	}
 }
 </script>
-
 <style lang="scss" scoped>
 .edit-shop-container {
-	background-color: #f5f5f5;
 	min-height: 100vh;
 	padding: 30rpx;
-
+	margin-right: 40rpx;
+	.submit-btn {
+		position: fixed;
+		bottom: 50rpx;
+		left: 30rpx;
+		right: 30rpx;
+		height: 90rpx;
+		background-color: #4CAF50;
+		color: white;
+		border-radius: 45rpx;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		font-size: 32rpx;
+		font-weight: bold;
+	}
+	
 	.nav-header {
 		display: flex;
-		justify-content: space-between;
 		align-items: center;
 		margin-bottom: 40rpx;
-
+		
+		.back-icon {
+			image {
+				width: 50rpx;
+				height: 50rpx;
+			}
+		}
+		
 		.page-title {
-			font-size: 36rpx;
+			font-size: 40rpx;
 			font-weight: bold;
+			margin-left: 20rpx;
 		}
 
 		.save-icon {
+			margin-left: auto;
 			color: #4CAF50;
 			font-size: 32rpx;
 		}
 	}
-
+	
 	.edit-form {
-		background-color: white;
+		background-color: #fff;
 		border-radius: 20rpx;
+		align-items: center;
+		justify-content: center;
 		padding: 30rpx;
-
+		margin-bottom: 100rpx;
+		
 		.form-item {
 			margin-bottom: 30rpx;
-
+			
 			.label {
 				display: block;
-				margin-bottom: 15rpx;
 				font-size: 32rpx;
 				color: #333;
+				margin-bottom: 15rpx;
 			}
-
-			.upload-logo,
-			.upload-background {
-				position: relative;
+			
+			.input-field {
+				width: 100%;
+				height: 80rpx;
+				border: 2rpx solid #ddd;
+				border-radius: 10rpx;
+				padding: 0 20rpx;
+				font-size: 28rpx;
+			}
+			
+			.textarea-field {
+				width: 100%;
+				height: 200rpx;
+				border: 2rpx solid #ddd;
+				border-radius: 10rpx;
+				padding: 20rpx;
+				font-size: 28rpx;
+			}
+			
+			.upload-logo {
 				width: 200rpx;
-				border-radius: 20rpx;
+				height: 200rpx;
+				border: 2rpx dashed #ddd;
+				border-radius: 10rpx;
 				overflow: hidden;
-
-				&.upload-background {
-					width: 100%;
-					height: 400rpx;
-				}
-
+				position: relative;
+				
 				image {
 					width: 100%;
 					height: 100%;
+					border-radius: 10rpx;
 					object-fit: cover;
 				}
-
+				
 				.upload-tips {
 					position: absolute;
 					bottom: 0;
 					left: 0;
 					width: 100%;
-					text-align: center;
 					background: rgba(0, 0, 0, 0.5);
 					color: white;
+					font-size: 24rpx;
+					text-align: center;
 					padding: 10rpx 0;
 				}
 			}
-
-			.input-field,
-			.textarea-field {
+			
+			.upload-background {
 				width: 100%;
-				border: 1rpx solid #e0e0e0;
+				height: 400rpx;
+				border: 2rpx dashed #ddd;
 				border-radius: 10rpx;
-				padding: 20rpx;
-				font-size: 32rpx;
-			}
-
-			.textarea-field {
-				height: 200rpx;
+				overflow: hidden;
+				position: relative;
+				
+				image {
+					width: 100%;
+					height: 100%;
+					border-radius: 10rpx;
+					object-fit: cover;
+				}
+				
+				.upload-tips {
+					position: absolute;
+					bottom: 0;
+					left: 0;
+					width: 100%;
+					background: rgba(0, 0, 0, 0.5);
+					color: white;
+					font-size: 24rpx;
+					text-align: center;
+					padding: 10rpx 0;
+				}
 			}
 		}
 	}

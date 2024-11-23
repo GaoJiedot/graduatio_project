@@ -74,7 +74,7 @@ export default {
         },
         goToProductManagement() {
             uni.navigateTo({
-                url: '/pages/product-management/product-management'
+                url: `/pages/product-management/product-management?shopId=${this.userInfo.shopId}`
             })
         },
         async getUserInfo() {

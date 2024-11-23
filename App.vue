@@ -2,7 +2,7 @@
 export default {
     onLaunch: function() {
         // 检查是否需要跳转到登录页
-        this.checkLoginStatus();
+        // this.checkLoginStatus();
     },
     methods: {
         // 检查登录状态

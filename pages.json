@@ -178,6 +178,20 @@
 			{
 				"navigationBarTitleText" : ""
 			}
+		},
+		{
+			"path" : "pages/add-product/add-product",
+			"style" : 
+			{
+				"navigationBarTitleText" : "添加商品"
+			}
+		},
+		{
+			"path" : "pages/edit-product/edit-product",
+			"style" : 
+			{
+				"navigationBarTitleText" : "编辑商品"
+			}
 		}
 
 

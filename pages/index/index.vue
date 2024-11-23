@@ -59,9 +59,10 @@
 		},
 		onLoad() {
 			uni.request({
-				url: 'http://localhost:8080/tabulate/type/0',
+				url: 'http://localhost:8080/tabulate/type/1',
 				method: 'GET',
 				success: (res) => {
+					console.log(res.data)
 					this.data = res.data.data.map(item => {
 						return {
 							...item,

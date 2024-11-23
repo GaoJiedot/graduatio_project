@@ -55,7 +55,6 @@
 						filePath: this.tempFilePath,
 						name: 'file',
 						success: (uploadRes) => {
-							console.log(uploadRes.data);
 							try {
 								const result = JSON.parse(uploadRes.data);
 								if (result.code === 200) {
