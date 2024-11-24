@@ -5,8 +5,8 @@
 		<view class="header">
 			<!-- 轮播图 -->
 			<swiper class="banner" autoplay="true" interval="3000" circular>
-				<swiper-item v-for="(image, index) in shop.bannerImages" :key="index">
-					<view class="banner-slide" :style="{ backgroundImage: `url(${image})` }"></view>
+				<swiper-item v-for="(image, index) in shop" :key="index">
+					<image :src="shop.shopImages"></image>
 				</swiper-item>
 			</swiper>
 			<!-- 轮播图控制按钮 -->
@@ -46,22 +46,16 @@
 
 		<!-- 服务部分 -->
 		<view class="services-section">
-			<view class="tabs">
-				<button v-for="tab in tabs" :key="tab.id" :class="['tab', { active: activeTab === tab.id }]"
-					@click="activeTab = tab.id">
-					{{ tab.name }}
-				</button>
-			</view>
 
 			<view class="services-list">
 				<view v-for="service in filteredServices" :key="service.id" class="service-item">
 					<view class="service-icon">
-						<image :src="service.icon" :alt="service.name" />
+						<image :src="service.tabulateImage" :alt="service.tabulateName" />
 					</view>
 					<view class="service-details">
-						<text class="service-name">{{ service.name }}</text><br>
+						<text class="service-name">{{ service.tabulateName }}</text><br>
 						<text class="service-description">{{ service.description }}</text><br>
-						<text class="price">¥{{ service.price }}</text>
+						<text class="price">¥{{ service.tabulatePrice }}</text>
 					</view>
 					<button class="book-button">抢购</button>
 				</view>
@@ -72,7 +66,7 @@
 		<!-- 底部导航 -->
 		<view class="bottom-nav">
 
-			<button class="nav-item">
+			<button class="nav-item" @click="callingPhone">
 				<i class="phone"></i>
 				<text>电话</text>
 			</button>
@@ -92,25 +86,12 @@
 
 				activeTab: 'all',
 				shop: {},
-				tabs: [{
-						id: 'all',
-						name: '全部'
-					},
-					{
-						id: 'haircut',
-						name: '洗剪吹'
-					},
-					{
-						id: 'color',
-						name: '烫染'
-					}
-				],
 				services: [{
-						id: 1,
-						name: '男士理发 渐变 造型',
-						description: '不限发型师',
-						price: 73,
-						icon: 'https://api.r10086.com/%E5%9B%BE%E5%8C%85/P%E7%AB%99%E7%B3%BB%E5%88%971/75034270_p0.jpg'
+						tabulateId: null,
+						tabulateName: "",
+						tabulateTabs: "",
+						tabulateImage: "",
+						tabulatePrice: null
 					}
 
 				]
@@ -122,6 +103,40 @@
 					url: '/pages/appointment/appointment'
 				})
 			},
+			callingPhone() {
+				uni.makePhoneCall({
+					phoneNumber: this.shop.shopPhone
+				});
+			},
+			getStoreInfo() {
+				uni.request({
+					url: `http://localhost:8080/shop/${this.shop.shopId}`,
+					method: 'GET',
+					data: {
+						shopId: this.shop.shopId
+					},
+					success: (res) => {
+						console.log(res.data);
+						this.shop = res.data.data;
+					},
+					fail: (err) => {
+						console.log(err);
+					}
+				});
+			},
+			getServices() {
+				uni.request({
+					url: `http://localhost:8080/tabulate/getByShopId/${this.shop.shopId}`,
+					method: 'GET',
+					success: (res) => {
+						console.log(res.data);
+						this.services = res.data.data;
+					},
+					fail: (err) => {
+						console.log(err);
+					}
+				});
+			},
 			tomap() {
 				uni.navigateTo({
 					url: "/pages/map/map"
@@ -129,18 +144,9 @@
 			}
 		},
 		onLoad(options) {
-			const shopInfo = JSON.parse(decodeURIComponent(options.shop));
-			this.shop = shopInfo;
-
-
-
-
-		},
-		onShow() {
-			uni.setNavigationBarTitle({
-				title: this.shop.shopName
-			})
-
+			this.shop.shopId = options.shopId;
+			this.getServices()
+			this.getStoreInfo()
 		},
 		computed: {
 			filteredServices() {
@@ -177,6 +183,12 @@
 			.banner {
 				height: 420rpx;
 				background: #f0f0f0;
+
+				image {
+					width: 100%;
+					height: 100%;
+					object-fit: cover;
+				}
 
 				.banner-slide {
 					width: 100%;

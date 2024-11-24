@@ -3,7 +3,7 @@
 		<view class="page-header">
 			<view class="header-actions">
 				<input class="search-input" placeholder="搜索用户名/手机号" confirm-type="search" v-model="searchQuery"
-					@confirm="searchUsers" />
+					@confirm="searchshops" />
 				<button class="searchuser" @click="searchshops">搜索</button>
 			</view>
 		</view>
@@ -32,8 +32,8 @@
 				</view>
 
 				<view class="merchant-actions">
-					<view class="action-btn detail" @click="viewMerchantDetails(merchant)">
-						编辑信息
+					<view class="action-btn detail" @click="editShop(merchant)">
+						店铺管理
 					</view>
 					<view class="action-btn manage" @click="manageMerchant(merchant)">
 						下架店铺
@@ -45,70 +45,148 @@
 </template>
 
 <script>
-	export default {
-		data() {
-			return {
-				merchantList: [],
-				searchQuery: ''
-			}
-		},
-		methods: {
-
-			getShop() {
-				uni.request({
-					url: `http://localhost:8080/shop/admin/all`,
-					method: 'GET',
-					success: (res) => {
+export default {
+	data() {
+		return {
+			merchantList: [],
+			searchQuery: '',
+			currentPage: 1,
+			pageSize: 10
+		}
+	},
+	methods: {
+		getShop() {
+			uni.request({
+				url: `http://localhost:8080/shop/admin/all`,
+				method: 'GET',
+				success: (res) => {
+					if (res.data.code === 200) {
 						this.merchantList = res.data.data
-						console.log(res.data.data)
-
-					}
-				})
-			},
-			viewMerchantDetails(merchant) {
-				uni.navigateTo({
-					url: `/pages/merchant-details/merchant-details?merchantId=${merchant.id}`
-				});
-			},
-
-			// 管理或审核商家
-			manageMerchant(merchant) {
-				
-					
-			},
-			searchshops() {
-				if (!this.searchQuery.trim()) {
-					uni.showToast({
-						title: '请输入搜索手机号',
-						icon: 'none'
-					});
-					return;
-				}
-				uni.request({
-					url: `http://localhost:8080/shop/shop/${this.searchQuery}`,
-					method: 'GET',
-					data: {
-						query: this.searchQuery,
-						page: this.currentPage,
-						limit: this.pageSize
-					},
-					success: (res) => {
-						console.log(res.data.data);
-					},
-					fail: (err) => {
-						console.error('搜索用户失败:', err);
+						console.log('获取所有商家:', res.data.data)
+					} else {
 						uni.showToast({
-							title: '请求失败，请检查网络',
+							title: '获取商家列表失败',
 							icon: 'none'
 						});
 					}
-				});
-			}
+				},
+				fail: (err) => {
+					console.error('请求失败:', err);
+					uni.showToast({
+						title: '网络请求失败',
+						icon: 'none'
+					});
+				}
+			})
 		},
-		onLoad() {
-			this.getShop()
+		
+		editShop(merchant) {
+			uni.navigateTo({
+					url: `/pages/edit-shop/edit-shop?shopId=${merchant.shopId}`
+				})
+		},
+
+		manageMerchant(merchant) {
+			uni.showModal({
+				title: '是否确认下架',
+					content: `确认下架店铺 ${merchant.shopName} 吗？`,
+					success: (res) => {
+						if (res.confirm) {
+							uni.request({
+								url: `http://localhost:8080/shop/${merchant.shopId}`,
+								method: 'DELETE',
+								success: (res) => {
+									if (res.data.code === 200) {
+										uni.showToast({
+											title: '下架成功',
+											icon: 'success'
+										});
+										this.getShop();
+									} else {
+										uni.showToast({
+											title: '下架取消',
+											icon: 'none'
+										});
+									}
+								},
+								fail: (err) => {
+									console.error('下架失败:', err);
+									uni.showToast({
+										title: '网络请求失败',
+										icon: 'none'
+									});
+								}
+							});
+						}
+					}
+			})
+		},
+		
+		searchshops() {
+			if (!this.searchQuery.trim()) {
+				this.getShop();
+				return;
+			}
+			
+			uni.showLoading({
+				title: '搜索中...'
+			});
+			
+			uni.request({
+				url: `http://localhost:8080/shop/shop/${this.searchQuery}`,
+				method: 'GET',
+				data: {
+					query: this.searchQuery,
+					page: this.currentPage,
+					limit: this.pageSize
+				},
+				success: (res) => {
+					uni.hideLoading();
+					if (res.data.code === 200) {
+						if (Array.isArray(res.data.data)) {
+							this.merchantList = res.data.data;
+						} else if (res.data.data) {
+							this.merchantList = [res.data.data];
+						} else {
+							this.merchantList = [];
+							uni.showToast({
+								title: '未找到相关商家',
+								icon: 'none'
+							});
+						}
+					} else {
+						uni.showToast({
+							title: res.data.msg || '搜索失败',
+							icon: 'none'
+						});
+					}
+				},
+				fail: (err) => {
+					uni.hideLoading();
+					console.error('搜索失败:', err);
+					uni.showToast({
+						title: '网络请求失败',
+						icon: 'none'
+					});
+				}
+			});
+		},
+		
+	},
+	onLoad() {
+		this.getShop()
+	},
+	watch: {
+		searchQuery: {
+			handler(newVal, oldVal) {
+				if (newVal.trim() !== oldVal.trim()) {
+					this.searchshops();
+				}
+			},
+			immediate: false
 		}
 	}
+}
 </script>
 
 <style lang="scss" scoped>

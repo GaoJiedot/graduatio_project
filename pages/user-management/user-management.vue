@@ -3,10 +3,10 @@
 		<!-- 页面头部 -->
 		<view class="page-header">
 			<view class="header-actions">
-				<input class="search-input" placeholder="搜索用户名/手机号" confirm-type="search" v-model="searchQuery"
+				<input class="search-input" placeholder="搜索手机号" confirm-type="search" v-model="searchQuery"
 					@confirm="searchUsers" />
 				<button class="searchuser" @click="searchUsers">搜索</button>
-				<button class="delete-selected" @click="deleteSelectedUsers">批量删除</button>
+				<button class="delete-selected" @click="deleteSelectedUsers" :disabled="!hasSelectedUsers">批量删除</button>
 			</view>
 		</view>
 
@@ -19,8 +19,8 @@
 			</view>
 			<!-- 单个用户项 -->
 			<view v-for="(user, index) in userList" :key="user.userId" class="user-item">
-				<checkbox class="user-checkbox" :value="user.userId" :model-value="selectedUsers[user.userId]"
-					@change="toggleUserSelection(user.userId)" />
+				<checkbox class="user-checkbox" :value="user.userId" :checked="selectedUsers[user.userId]"
+					:disabled="user.userId === '1'" @change="toggleUserSelection(user.userId)" />
 
 				<view class="user-info">
 					<view class="user-name">{{ user.userName }}</view>
@@ -34,7 +34,7 @@
 				</view>
 				<view class="user-actions">
 					<button class="edit-btn" @click="editUser(user)">编辑</button>
-					<button class="delete-btn" @click="deleteUser(user)">删除</button>
+					<button class="delete-btn" @click="deleteUser(user)" :disabled="user.userId === '1'">删除</button>
 				</view>
 			</view>
 		</view>
@@ -55,84 +55,137 @@
 	export default {
 		data() {
 			return {
-				userList: [
-					{
+				userList: [{
 					userId: null,
 					userName: '张三',
 					userAccount: 'zhangsan',
 					userType: 0,
-					}], 
-				selectedUsers:{},
-				selectAll:false, 
-				searchQuery:'', 
-				currentPage:1,
-				totalPages:1,
-				pageSize:10
+				}],
+				selectedUsers: {},
+				selectAll: false,
+				searchQuery: '',
+				currentPage: 1,
+				totalPages: 1,
+				pageSize: 10
+			}
+		},
+		computed: {
+			hasSelectedUsers() {
+				return Object.values(this.selectedUsers).some(selected => selected);
 			}
 		},
 		methods: {
-			// 全选/取消全选
 			toggleSelectAll() {
-				this.selectAll = !this.selectAll;
-				if (this.selectAll) {
-					// 将所有用户ID添加到selectedUsers数组中
-					this.selectedUsers = this.userList.map(user => user.userId.toString());
-				} else {
-					// 清空selectedUsers数组
-					this.selectedUsers = [];
-				}
+				const newState = !this.selectAll;
+				this.selectAll = newState;
+				const newSelectedUsers = {};
+				this.userList.forEach(user => {
+					if (user.userId !== '1') {
+						newSelectedUsers[user.userId] = newState;
+					}
+				});
+				this.selectedUsers = newSelectedUsers;
 			},
 			toggleUserSelection(userId) {
-				this.$set(this.selectedUsers, userId, !this.selectedUsers[userId]); // Vue 的响应式更新
-				// 更新全选状态
-				this.selectAll = Object.keys(this.selectedUsers).length === this.userList.length &&
-					Object.values(this.selectedUsers).every(isSelected => isSelected);
-			},
-			// 批量删除选中的用户
-			deleteSelectedUsers() {
-				const selectedIds = Object.keys(this.selectedUsers).filter(id => this.selectedUsers[id]);
-				if (selectedIds.length === 0) {
-					uni.showToast({
-						title: '请先选择要删除的用户',
-						icon: 'none'
-					});
+				if (userId === '1') {
 					return;
 				}
 
-				uni.showModal({
-					title: '确认删除',
-					content: `是否删除选中的 ${selectedIds.length} 个用户？`,
+				this.$set(this.selectedUsers, userId, !this.selectedUsers[userId]);
+
+				// 检查是否所有可选用户都被选中
+				const selectableUsers = this.userList.filter(user => user.userId !== '1');
+				this.selectAll = selectableUsers.every(user => this.selectedUsers[user.userId]);
+			},
+			deleteSelectedUsers() {
+			        const selectedUserIds = Object.entries(this.selectedUsers)
+			            .filter(([userId, isSelected]) => isSelected && userId !== '1')
+			            .map(([userId]) => parseInt(userId));
+			            
+			        if (selectedUserIds.length === 0) {
+			            uni.showToast({
+			                title: '请选择要删除的用户',
+			                icon: 'none'
+			            });
+			            return;
+			        }
+			
+			        uni.showModal({
+			            title: '确认删除',
+			            content: `是否删除选中的 ${selectedUserIds.length} 个用户？`,
+			            success: (res) => {
+			                if (res.confirm) {
+			                    uni.request({
+			                        url: 'http://localhost:8080/admin/batch',
+			                        method: 'DELETE',
+			                        data: selectedUserIds,
+			                        success: (res) => {
+			                            if (res.data.code === 200) {
+			                                // 更新用户列表
+			                                this.userList = this.userList.filter(
+			                                    user => !selectedUserIds.includes(parseInt(user.userId))
+			                                );
+			                                // 清空选择状态
+			                                this.selectedUsers = {};
+			                                this.selectAll = false;
+			                                
+			                                uni.showToast({
+			                                    title: '批量删除成功',
+			                                    icon: 'success'
+			                                });
+			                            } else {
+			                                uni.showToast({
+			                                    title: res.data.message || '删除失败',
+			                                    icon: 'none'
+			                                });
+			                            }
+			                        },
+			                        fail: () => {
+			                            uni.showToast({
+			                                title: '请求失败，请稍后再试',
+			                                icon: 'none'
+			                            });
+			                        }
+			                    });
+			                }
+			            }
+			        });
+			    },
+
+			performBatchDelete(userIds) {
+				uni.request({
+					url: 'http://localhost:8080/user/batch',
+					method: 'DELETE',
+					data: {
+						userIds: userIds
+					},
 					success: (res) => {
-						if (res.confirm) {
-							uni.request({
-								url: `http://localhost:8080/user/delete/batch`,
-								method: 'POST',
-								data: {
-									userIds: selectedIds
-								},
-								success: (res) => {
-									if (res.data.code === 200) {
-										this.userList = this.userList.filter(user => !selectedIds
-											.includes(user.userId));
-										this.selectedUsers = {}; // 重置选中状态
-										this.selectAll = false;
-										uni.showToast({
-											title: '删除成功',
-											icon: 'success'
-										});
-									} else {
-										uni.showToast({
-											title: '删除失败',
-											icon: 'none'
-										});
-									}
-								}
+						if (res.data.code === 200) {
+							// 更新用户列表
+							this.userList = this.userList.filter(user => !userIds.includes(user.userId));
+							// 清空选择状态
+							this.selectedUsers = {};
+							this.selectAll = false;
+
+							uni.showToast({
+								title: '批量删除成功',
+								icon: 'success'
+							});
+						} else {
+							uni.showToast({
+								title: res.data.message || '删除失败',
+								icon: 'none'
 							});
 						}
+					},
+					fail: () => {
+						uni.showToast({
+							title: '请求失败，请稍后再试',
+							icon: 'none'
+						});
 					}
 				});
 			},
-			// 编辑单个用户
 			editUser(user) {
 				uni.navigateTo({
 					url: `/pages/edit-user/edit-user?userId=${user.userId}`
@@ -181,15 +234,12 @@
 					method: 'GET',
 					success: (res) => {
 						this.userList = res.data.data || [];
-						// 确保 userId 是字符串
 						this.userList = this.userList.map(user => ({
 							...user,
 							userId: user.userId.toString()
 						}));
-						// 重置选中状态
 						this.selectedUsers = [];
 						this.selectAll = false;
-						// 更新分页信息（假设后端返回了分页信息）
 						this.currentPage = res.data.currentPage || page;
 						this.totalPages = res.data.totalPages || 1;
 					},
@@ -202,34 +252,54 @@
 					}
 				});
 			},
-			// 搜索用户
 			searchUsers() {
 				if (!this.searchQuery.trim()) {
-					uni.showToast({
-						title: '请输入搜索手机号',
-						icon: 'none'
-					});
+
+					this.getuser()
 					return;
 				}
+
 				uni.request({
 					url: `http://localhost:8080/user/userAccount/${this.searchQuery}`,
 					method: 'GET',
-					data: {
-						query: this.searchQuery,
-						page: this.currentPage,
-						limit: this.pageSize
-					},
 					success: (res) => {
-					
-						console.log(this.user);
-						this.user=res.data.data;
-						
-						
-						this.selectedUsers = [];
-						this.selectAll = false;
-						// 更新分页信息（假设后端返回了分页信息）
-						this.currentPage = res.data.currentPage || 1;
-						this.totalPages = res.data.totalPages || 1;
+						if (res.data.code === 200) {
+							// 确保返回的数据是数组形式
+							if (res.data.data) {
+								// 如果返回的是单个对象，将其转换为数组
+								const searchResult = Array.isArray(res.data.data) ? res.data.data : [res.data
+									.data
+								];
+
+								// 更新用户列表
+								this.userList = searchResult.map(user => ({
+									...user,
+									userId: user.userId?.toString() || ''
+								}));
+
+								// 重置分页和选择状态
+								this.currentPage = 1;
+								this.totalPages = 1;
+								this.selectedUsers = {};
+								this.selectAll = false;
+
+								// 如果没有搜索结果
+								if (this.userList.length === 0) {
+									uni.showToast({
+										title: '未找到匹配的用户',
+										icon: 'none'
+									});
+								}
+							} else {
+								this.userList = [];
+								uni.showToast({
+									title: '未找到匹配的用户',
+									icon: 'none'
+								});
+							}
+						} else {
+
+						}
 					},
 					fail: (err) => {
 						console.error('搜索用户失败:', err);
@@ -240,7 +310,6 @@
 					}
 				});
 			},
-			// 更改分页
 			changePage(direction) {
 				const newPage = this.currentPage + direction;
 				if (newPage > 0 && newPage <= this.totalPages) {
@@ -250,6 +319,16 @@
 		},
 		onLoad() {
 			this.getuser();
+		},
+		watch: {
+			searchQuery: {
+				handler(newVal, oldVal) {
+					if (newVal.trim() !== oldVal.trim()) {
+						this.searchUsers();
+					}
+				},
+				immediate: false
+			}
 		}
 	}
 </script>

@@ -6,16 +6,6 @@
 
 		<view class="form-content">
 			<view class="form-item">
-				<text class="label">商品图片</text>
-				<view class="image-upload" @click="chooseImage">
-					<image v-if="formData.tabulateImage" :src="formData.tabulateImage" mode="aspectFill"></image>
-					<view v-else class="upload-placeholder">
-						<text>点击上传图片</text>
-					</view>
-				</view>
-			</view>
-
-			<view class="form-item">
 				<text class="label">商品名称</text>
 				<input type="text" v-model="formData.tabulateName" placeholder="请输入商品名称" class="input-field" />
 			</view>
@@ -36,175 +26,220 @@
 			</view>
 		</view>
 
-		<view class="submit-btn" @click="submitForm">添加商品</view>
+		<view class="image-section">
+			<text class="section-title">商品图片</text>
+			<view class="image-upload-area" @click="handleImageUpload">
+				<block v-if="formData.tabulateImage">
+					<image :src="formData.tabulateImage" mode="aspectFill" class="preview-image"></image>
+					<text class="upload-tip">点击更换图片</text>
+				</block>
+				<block v-else>
+					<view class="upload-placeholder">
+						<text class="upload-icon">+</text>
+						<text class="upload-text">点击上传图片</text>
+					</view>
+				</block>
+			</view>
+		</view>
+
+		<view class="submit-btn" @click="submitForm">提交商品信息</view>
 	</view>
 </template>
 
 <script>
-	export default {
-		data() {
-			return {
-				productId: null, // 存储新增商品的 ID
-				tempImagePath: '', // 临时存储选择的图片路径
-				formData: {
-					tabulateImage: '', // 图片地址
-					tabulateName: '',
-					tabulatePrice: '',
-					tabulateDescription: '',
-					tabulateStock: '',
-					tabulateType: null,
-					shopId: '',
-					tabuleTabs: ''
-				}
-			};
-		},
-		onLoad(options) {
+export default {
+	data() {
+		return {
+			productId: null,
+			tempFilePath: '',
+			formData: {
+				tabulateImage: '',
+				tabulateName: '',
+				tabulatePrice: '',
+				tabulateDescription: '',
+				tabulateStock: '',
+				tabulateType: null,
+				shopId: '',
+				tabuleTabs: ''
+			}
+		};
+	},
+
+	onLoad(options) {
+		if (options.shopId) {
 			this.formData.shopId = options.shopId;
+		} else {
+			uni.showToast({
+				title: '缺少商铺ID',
+				icon: 'none'
+			});
+			uni.navigateBack();
+		}
+	},
 
+	methods: {
+		validateBasicInfo() {
+			const validations = [
+				{ field: 'tabulateName', message: '请输入商品名称' },
+				{ field: 'tabulatePrice', message: '请输入商品价格' },
+				{ field: 'tabulateStock', message: '请输入商品库存' }
+			];
+
+			for (const validation of validations) {
+				if (!this.formData[validation.field]) {
+					uni.showToast({
+						title: validation.message,
+						icon: 'none'
+					});
+					return false;
+				}
+			}
+			return true;
 		},
 
-		methods: {
-			validateForm() {
-				if (!this.formData.tabulateName) {
-					uni.showToast({
-						title: '请输入商品名称',
-						icon: 'none'
-					});
-					return false;
-				}
-				if (!this.formData.tabulatePrice) {
-					uni.showToast({
-						title: '请输入商品价格',
-						icon: 'none'
-					});
-					return false;
-				}
-				if (!this.formData.tabulateStock) {
-					uni.showToast({
-						title: '请输入商品库存',
-						icon: 'none'
-					});
-					return false;
-				}
-				return true;
-			},
+		async handleImageUpload() {
+			// 先验证基本信息
+			if (!this.validateBasicInfo()) return;
 
-			// 选择图片
-			async chooseImage() {
-				try {
-					const chooseResult = await uni.chooseImage({
-						count: 1,
-						sizeType: ['compressed'],
-						sourceType: ['album', 'camera']
-					});
-					this.tempImagePath = chooseResult.tempFilePaths[0];
-					this.formData.tabulateImage = chooseResult.tempFilePaths[0];
-					console.log("图片路径", this.formData.tabulateImage);
-					console.log("图片路径", this.tempImagePath);
-					uni.showToast({
-						title: '图片选择成功',
-						icon: 'none'
-					});
-				} catch (error) {
-					uni.showToast({
-						title: error.message || '选择图片失败',
-						icon: 'none'
-					});
-				}
-			},
-
-			async submitProductInfo() {
-				try {
-					uni.showLoading({
-						title: '提交商品信息...'
-					});
-
-					// 提交商品基本信息
-					const res = await uni.request({
-						url: 'http://localhost:8080/tabulate/add', // 新增商品接口
-						method: 'POST',
-						data: this.formData
-
-					});
-
-					if (res.data.code === 200) {
-						this.productId = res.data.data.tabulateId;
-						console.log("this.productId",this.productId)
-						console.log("res.data.data.tabulateId",res.data.data.tabulateId)
-						
-						uni.showToast({
-							title: '商品信息提交成功',
-							icon: 'success'
-						});
-					} else {
-						throw new Error(res.data.msg || '商品信息提交失败');
-					}
-				} catch (error) {
-					uni.showToast({
-						title: error.message || '操作失败',
-						icon: 'none'
-					});
-				} finally {
-					uni.hideLoading();
-				}
-			},
-
-			async uploadImage(productId,prfilePath) {
-				console.log("真实路径",filePath)
+			try {
+				// 如果还没有商品ID，先提交基本信息
 				if (!this.productId) {
+					await this.submitBasicInfo();
+				}
+				// 选择并上传图片
+				await this.chooseAndUploadImage();
+			} catch (error) {
+				uni.showToast({
+					title: error.message || '操作失败',
+					icon: 'none'
+				});
+			}
+		},
+
+		async submitBasicInfo() {
+			try {
+				uni.showLoading({
+					title: '提交商品信息...'
+				});
+
+				const res = await uni.request({
+					url: 'http://localhost:8080/tabulate/add',
+					method: 'POST',
+					data: this.formData
+				});
+
+				if (res.data.code === 200) {
+					this.productId = res.data.data.tabulateId;
+				} else {
+					throw new Error(res.data.msg || '商品信息提交失败');
+				}
+			} catch (error) {
+				throw new Error(error.message || '商品信息提交失败');
+			} finally {
+				uni.hideLoading();
+			}
+		},
+
+		async chooseAndUploadImage() {
+			try {
+				const chooseResult = await uni.chooseImage({
+					count: 1,
+					sizeType: ['compressed'],
+					sourceType: ['album', 'camera']
+				});
+
+				this.tempFilePath = chooseResult.tempFilePaths[0];
+				await this.uploadImage();
+			} catch (error) {
+				uni.showToast({
+					title: '选择图片失败',
+					icon: 'none'
+				});
+			}
+		},
+
+		async uploadImage() {
+			try {
+				uni.showLoading({
+					title: '上传图片中...'
+				});
+
+				const uploadResult = await uni.uploadFile({
+					url: `http://localhost:8080/tabulate/uploadTabulateImages/${this.productId}`,
+					filePath: this.tempFilePath,
+					name: 'file'
+				});
+
+				const result = JSON.parse(uploadResult.data);
+				if (result.code === 200) {
+					this.formData.tabulateImage = result.data;
+					await this.updateProduct();
+				} else {
+					throw new Error(result.msg || '图片上传失败');
+				}
+			} catch (error) {
+				throw new Error(error.message || '图片上传失败');
+			} finally {
+				uni.hideLoading();
+			}
+		},
+
+		async updateProduct() {
+			try {
+				const res = await uni.request({
+					url: 'http://localhost:8080/tabulate/update',
+					method: 'PUT',
+					data: {
+						tabulateId: this.productId,
+						...this.formData
+					}
+				});
+
+				if (res.data.code === 200) {
 					uni.showToast({
-						title: '请先提交商品信息',
-						icon: 'none'
+						title: '商品添加成功',
+						icon: 'success'
 					});
+					setTimeout(() => {
+						uni.navigateBack();
+					}, 1500);
+				} else {
+					throw new Error(res.data.msg || '更新商品信息失败');
+				}
+			} catch (error) {
+				throw new Error(error.message || '更新商品信息失败');
+			}
+		},
+
+		async submitForm() {
+			if (!this.validateBasicInfo()) return;
+			
+			try {
+				// 如果已经上传了图片，说明基本信息已提交，直接返回
+				if (this.formData.tabulateImage) {
+					uni.navigateBack();
 					return;
 				}
-
-				try {
-					uni.showLoading({
-						title: '上传图片中...'
-					});
-
-					const uploadResult = await uni.uploadFile({
-						url: `http://localhost:8080/tabulate/uploadTabulateImages/${this.productId}`,
-						filePath:this.tempImagePath,
-						name: 'file'
-					});
-
-					const result = JSON.parse(uploadResult.data);
-					console.log("hhhh", result);
-
-					if (result.code === 200) {
-						this.formData.tabulateImage = result.data;
-						console.log("this.formData.tabulateImage", this.formData.tabulateImage);
-						this.tempImagePath = '';
-						uni.showToast({
-							title: '图片上传成功',
-							icon: 'success'
-						});
-					} else {
-						throw new Error(data.msg || '图片上传失败');
-					}
-				} catch (error) {
-					uni.showToast({
-						title: error.message || '图片上传失败',
-						icon: 'none'
-					});
-				} finally {
-					uni.hideLoading();
-				}
-			},
-
-			async submitForm() {
-				if (!this.validateForm()) return;
-
-				await this.submitProductInfo();
-
-
-				uni.navigateBack();
+				
+				// 否则提示用户上传图片
+				uni.showToast({
+					title: '请上传商品图片',
+					icon: 'none'
+				});
+			} catch (error) {
+				uni.showToast({
+					title: error.message || '操作失败',
+					icon: 'none'
+				});
 			}
 		}
-	};
+	}
+};
 </script>
+
+<style lang="scss" scoped>
+// 样式保持不变...
+</style>
 
 <style lang="scss" scoped>
 	.product-form-container {
@@ -218,17 +253,9 @@
 			align-items: center;
 			margin-bottom: 40rpx;
 
-			.back-icon {
-				image {
-					width: 50rpx;
-					height: 50rpx;
-				}
-			}
-
 			.page-title {
 				font-size: 40rpx;
 				font-weight: bold;
-				margin-left: 20rpx;
 			}
 		}
 
@@ -236,6 +263,7 @@
 			background-color: #fff;
 			border-radius: 20rpx;
 			padding: 30rpx;
+			margin-bottom: 30rpx;
 
 			.form-item {
 				margin-bottom: 30rpx;
@@ -264,38 +292,58 @@
 					padding: 20rpx;
 					font-size: 28rpx;
 				}
+			}
+		}
 
-				.image-upload {
-					width: 200rpx;
-					height: 200rpx;
-					border: 2rpx dashed #ddd;
+		.image-section {
+			background-color: #fff;
+			border-radius: 20rpx;
+			padding: 30rpx;
+			margin-bottom: 120rpx;
+
+			.section-title {
+				font-size: 32rpx;
+				color: #333;
+				margin-bottom: 20rpx;
+				display: block;
+			}
+
+			.image-upload-area {
+				width: 100%;
+				min-height: 300rpx;
+				border: 2rpx dashed #ddd;
+				border-radius: 10rpx;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+
+				.preview-image {
+					width: 100%;
+					height: 300rpx;
 					border-radius: 10rpx;
+				}
+
+				.upload-tip {
+					margin-top: 10rpx;
+					color: #666;
+					font-size: 24rpx;
+				}
+
+				.upload-placeholder {
 					display: flex;
 					flex-direction: column;
-					justify-content: center;
 					align-items: center;
 
-					image {
-						width: 100%;
-						height: 100%;
-						border-radius: 10rpx;
+					.upload-icon {
+						font-size: 60rpx;
+						color: #999;
+						margin-bottom: 10rpx;
 					}
 
-					.upload-placeholder {
-						display: flex;
-						flex-direction: column;
-						align-items: center;
-
-						image {
-							width: 60rpx;
-							height: 60rpx;
-							margin-bottom: 10rpx;
-						}
-
-						text {
-							font-size: 24rpx;
-							color: #999;
-						}
+					.upload-text {
+						font-size: 28rpx;
+						color: #999;
 					}
 				}
 			}

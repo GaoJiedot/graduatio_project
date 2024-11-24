@@ -37,7 +37,7 @@
 			return {
 				userInfo: {
 				      userType: 0,
-				      shopId: 1
+				      
 				    },
 				data: []
 				}
@@ -49,10 +49,10 @@
 				});
 			},
 			todeatils(e) {
-				const shopInfo = JSON.stringify(e.shopId);
+				this.data.shopId = e.shopId
 				    
 				    uni.navigateTo({
-				        url: `/pages/Store-details/Store-details?shop=${encodeURIComponent(shopInfo)}`,
+				        url: `/pages/Store-details/Store-details?shopId=${this.data.shopId}`,
 				    });
 				
 			}
