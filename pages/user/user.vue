@@ -12,9 +12,21 @@
 			</view>
 		</view>
 		<view class="otherbox">
-			<view v-for="(item, index) in func" :key="index" class="other" @click="handleItemClick(index)">
-				{{item}}
+			<view class="other" @click="account">
+				个人信息
 			</view>
+			<view class="other" @click="disclaimer">
+				免责条款
+			</view>
+			<view v-if="data.userType==1">
+				<view class="other" @click="apply" >
+					申请成为商家
+				</view>
+				<view class="other" @click="apply" v-if="data.applyStatus==0">
+					填写店铺信息
+				</view>
+			</view>
+
 
 		</view>
 		<button class="exitbtn" @click="eixtbtns">退出登录</button>
@@ -26,14 +38,13 @@
 		data() {
 			return {
 				data: {},
-				func: ["个人信息", "免责条款"]
 			};
 		},
 		methods: {
 			eixtbtns() {
 				uni.removeStorage({
 					key: 'userInfo',
-					success: (res)=> {
+					success: (res) => {
 						console.log('success');
 					}
 				});
@@ -42,57 +53,43 @@
 					url: "/pages/login/login"
 				});
 			},
-			handleItemClick(index) {
-				switch (index) {
-					case 0:
-						uni.navigateTo({
-							url: "/pages/account/account"
-						});
-						break;
-					case 1:
-						uni.showModal({
-							title: '免责条款',
-							content: '乙方xx提醒甲方注意密码的保密。任何使用甲方密码进行的委托均视为有效的甲方委托。甲方自行承担由于其密码失密造成的损失。甲方如果遗失证券账户卡、 身份证明等证件， 应立即向乙方及其他相关机构挂失。 由于甲方未及时挂失而导致其遭受损失的， 由甲方自行承担， 乙方不承担任何责任。甲方通过私下协商达成的转让意向因对方不申报成交确认委托或申报不匹配的成交确认委托， 无法成交的， 乙方对此不承担责任。',
-							showCancel: false,
-							success: function(res) {
-								if (res.confirm) {
-									console.log('用户点击确定');
-								} else if (res.cancel) {
-									console.log('用户点击取消');
-								}
-							}
-						});
-
-						break;
-					case 2:
-						// 实现其他功能2的效果
-						console.log("功能1点击");
-
-						break;
-					case 3:
-						console.log("功能2点击");
-						break;
-					default:
-						console.log("未知功能");
-						break;
-				}
+			account() {
+				uni.navigateTo({
+					url: "/pages/account/account"
+				});
+			},
+			disclaimer() {
+				uni.showModal({
+					title: '免责条款',
+					content: '本平台提供的信息仅供参考，不构成任何投资建议。用户在使用本平台时，应自行判断并承担相应的风险。本平台不对任何因使用本平台信息而导致的直接或间接损失承担责任。',
+					showCancel: false,
+					confirmText: '确定'
+				})
+			},
+			app(){
+				
+			},
+			applyshop() {
+				uni.navigateTo({
+					url: `/pages/apply/apply?userId=${this.data.userId}`
+				});
 			}
 		},
 		onLoad() {
 			uni.getStorage({
 				key: 'userInfo',
-				success: (res) =>{
+				success: (res) => {
 					this.data = res.data;
-					console.log("获取到的数据:",this.data);
+					console.log("获取到的数据:", this.data);
 				}
 			});
 		},
 		onShow() {
 			uni.getStorage({
 				key: 'userInfo',
-				success: (res) =>{
+				success: (res) => {
 					this.data = res.data;
-					console.log("获取到的数据:",this.data);
+					console.log("获取到的数据:", this.data);
 				}
 			});
 		}

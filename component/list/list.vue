@@ -1,25 +1,17 @@
 <template>
 	<view class="container">
-		<!-- 第一个盒子 -->
 		<view class="box1">
-			<!-- 图片 -->
 			<img :src="tabulatedata.tabulateImage" alt="" />
-			<!-- 内容 -->
 			<view class="content">
 				<text>{{tabulatedata.tabulateName}}</text>
-
 				<view v-for="(tab, index) in tabulatedata.tabulateTabs" :key="index" class="clabal">
 					{{tab}}
 				</view>
 			</view>
 		</view>
-
-		<view class="atime" >
-			<timeSlotSelectorVue></timeSlotSelectorVue>
+		<view class="atime">
+			<timeSlotSelectorVue :shopId="shopId"></timeSlotSelectorVue>
 		</view>
-
-
-	
 	</view>
 </template>
 
@@ -28,21 +20,13 @@
 	export default {
 		props: {
 			tabulatedata: {
-			
-				tabulateName: {
-					type: String,
-					required: true
-				},
-				tabulateTabs: {
-					type: Array,
-					required: true
-				},
-				tabulateImage: {
-					type: String,
-					required: true
-				}
-				
-			}
+				type: Object,
+				default: () => ({})
+			},
+			shopId: {
+				type: [Number, null],
+				default: 0,
+			},
 
 		},
 		components: {
@@ -50,18 +34,14 @@
 		},
 		data() {
 			return {
-					tabulateName: '',
-					tabulateTabs: []
+				tabulateName: '',
+				tabulateTabs: []
 
 			}
 		},
 		methods: {
-			
-		},
-		mounted() {
-			
-		}
 
+		}
 	}
 </script>
 
@@ -85,7 +65,7 @@
 				width: 200rpx;
 				height: 200rpx;
 				margin: 20rpx;
-				object-fit: contain;
+				object-fit: cover;
 			}
 
 			.content {

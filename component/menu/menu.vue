@@ -52,8 +52,8 @@
 						menutext: "商家管理"
 					},
 					{
-						img: "/static/menuicon/更多.png",
-						menutext: "待开发"
+						img: "/static/menuicon/资质.png",
+						menutext: "申请管理"
 					},
 					{
 						img: "/static/menuicon/更多.png",
@@ -94,6 +94,10 @@
 							url: '/pages/merchant-management/merchant-management'
 						});
 						break;
+					case 2:
+						uni.navigateTo({
+							url: '/pages/apply-management/apply-management'
+						});
 					default:
 						uni.showToast({
 							title: '功能开发中',

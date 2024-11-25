@@ -38,10 +38,6 @@
 				<input class="input-field" v-model="shopInfo.shopPhone" type="number" placeholder="请输入联系电话" />
 			</view>
 
-			<view class="form-item">
-				<text class="label">营业时间:</text>
-				<input class="input-field" v-model="shopInfo.shopBusinessHours" placeholder="例如：09:00-22:00" />
-			</view>
 
 			<view class="form-item">
 				<text class="label">店铺地址:</text>
@@ -65,7 +61,7 @@ export default {
 				shopImages: '',
 				shopName: '',
 				shopDescription: '',
-				shopPhone: '',
+				shopPhone:null,
 				shopBusinessHours: '',
 				shopAddress: ''
 			},

@@ -71,7 +71,7 @@
 		{
 			"path": "pages/appointment/appointment",
 			"style": {
-				"navigationBarTitleText": "预约页面"
+				"navigationBarTitleText": "预约"
 			}
 		},
 		{
@@ -191,6 +191,20 @@
 			"style" : 
 			{
 				"navigationBarTitleText" : "编辑商品"
+			}
+		},
+		{
+			"path" : "pages/apply/apply",
+			"style" : 
+			{
+				"navigationBarTitleText" : "申请成为商家"
+			}
+		},
+		{
+			"path" : "pages/apply-management/apply-management",
+			"style" : 
+			{
+				"navigationBarTitleText" : "申请管理"
 			}
 		}
 

@@ -83,7 +83,7 @@
 	export default {
 		data() {
 			return {
-
+				userPhone:null,
 				activeTab: 'all',
 				shop: {},
 				services: [{
@@ -100,7 +100,7 @@
 		methods: {
 			appbtn() {
 				uni.navigateTo({
-					url: '/pages/appointment/appointment'
+					url: `/pages/appointment/appointment?shopId=${this.shop.shopId}&userPhone=${this.userPhone}`
 				})
 			},
 			callingPhone() {
@@ -145,6 +145,8 @@
 		},
 		onLoad(options) {
 			this.shop.shopId = options.shopId;
+			this.userPhone = options.userPhone;
+			this.getServices()
 			this.getServices()
 			this.getStoreInfo()
 		},
