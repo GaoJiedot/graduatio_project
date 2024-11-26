@@ -10,7 +10,7 @@
 
 		
 		<view class="tab-content">
-			<view v-for="(item, index) in orderdata" :key="index" v-if="activeTab === 0" @click="toapp">
+			<view v-for="(item, index) in orderdata" :key="index" v-if="activeTab === 0" >
 				<OrderListVue :orderdata="orderdata[index]" ></OrderListVue>
 			</view>
 			<view v-for="(item, index) in orderdata" :key="index" v-if="activeTab === 1">
@@ -41,11 +41,6 @@ export default {
             this.activeTab = index;
             this.fetchOrderData(index + 1);
         },
-        toapp() {
-            uni.navigateTo({
-                url: '/pages/appointment/appointment'
-            })
-        },
         fetchOrderData(status) {
             uni.request({
                 url: `http://localhost:8080/order/status/${status}`,
@@ -63,7 +58,10 @@ export default {
     onLoad() {
      
         this.fetchOrderData(1);
-    }
+    },
+	onShow() {
+		    this.fetchOrderData(this.activeTab + 1);
+	}
 }
 </script>
 

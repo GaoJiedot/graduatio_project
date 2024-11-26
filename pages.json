@@ -173,13 +173,6 @@
 			}
 		},
 		{
-			"path" : "pages/merchant-details/merchant-details",
-			"style" : 
-			{
-				"navigationBarTitleText" : ""
-			}
-		},
-		{
 			"path" : "pages/add-product/add-product",
 			"style" : 
 			{
@@ -205,6 +198,20 @@
 			"style" : 
 			{
 				"navigationBarTitleText" : "申请管理"
+			}
+		},
+		{
+			"path" : "pages/today-appointment/today-appointment",
+			"style" : 
+			{
+				"navigationBarTitleText" : "今日预约"
+			}
+		},
+		{
+			"path" : "pages/evaluate/evaluate",
+			"style" : 
+			{
+				"navigationBarTitleText" : "评价"
 			}
 		}
 

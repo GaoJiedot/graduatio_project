@@ -35,56 +35,56 @@
 					shopName: '',
 					shopPhone: null,
 					shopKeeper: ''
-				}
+				},
+				shopId: null
 			}
 		},
 		methods: {
-			saveShopInfo() {
-				if (!this.validateForm()) {
-					return;
-				}
-
-				uni.request({
-					url: `http://localhost:8080/shop`,
-					method: 'POST',
-					data: {
-						userId: this.userId,
-						shopName: this.shopInfo.shopName,
-						shopPhone: this.shopInfo.shopPhone,
-						shopKeeper: this.shopInfo.shopKeeper,
-						applyStatus: 1
-					},
-					success: (res) => {
-						if (res.data.code == 200) {
-							uni.showToast({
-								title: '申请成功',
-								icon: 'success'
-							});
-							uni.reLaunch({
-								url: '/pages/user/user'
-							})
-						} else {
-							uni.showToast({
-								title: '申请失败',
-								icon: 'none'
-							});
-
-						}
-					},
-					fail: (err) => {
+			 saveShopInfo() {
+			      if (!this.validateForm()) {
+			        return;
+			      }
+			
+			      if (!this.userId) {
+			        uni.showToast({
+			          title: '用户信息获取失败',
+			          icon: 'none'
+			        });
+			        return;
+			      }
+			
+			      uni.request({
+			        url: `http://localhost:8080/temporary`,
+			        method: 'POST',
+			        data: {
+			          shopName: this.shopInfo.shopName,
+			          shopPhone: this.shopInfo.shopPhone,
+			          shopKeeper: this.shopInfo.shopKeeper,
+					  userId: this.userId
+			        },
+			        success: (res) => {
 						uni.showToast({
-							title: '网络错误',
-							icon: 'none'
+							title: '申请已提交',
+							icon: 'success'
 						});
-					}
-				})
-			},
-
+						
+						setTimeout(() => {
+							uni.navigateBack();
+						}, 1500);
+			        },
+			        fail: (err) => {
+			          uni.showToast({
+			            title: '网络错误',
+			            icon: 'none'
+			          });
+			        }
+			      })
+			    },
 			validateForm() {
 				const {
 					shopName,
 					shopPhone,
-					shopAddress
+					shopKeeper
 				} = this.shopInfo;
 
 				if (!shopName) {
@@ -103,9 +103,9 @@
 					return false;
 				}
 
-				if (!shopAddress) {
+				if (!shopKeeper) {
 					uni.showToast({
-						title: '请输入店铺地址',
+						title: '请输入真实姓名',
 						icon: 'none'
 					});
 					return false;
@@ -114,9 +114,11 @@
 				return true;
 			}
 		},
-		onLoad(options) {
-			this.userId = options.userId
-		}
+		 onLoad(options) {
+		    if (options && options.userId) {
+		      this.userId = options.userId;
+		    }
+		  }
 	}
 </script>
 <style lang="scss" scoped>

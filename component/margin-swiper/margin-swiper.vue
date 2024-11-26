@@ -12,8 +12,8 @@
 				<view class="swiper-item video-item">
 					<video 
 						id="myVideo" 
-						src="/static/ResourceFiles/bgvideo.mp4"
-						:autoplay="false"
+						src="http://localhost:8080/bg/bgvideo.mp4"
+						:autoplay="true"
 						:loop="true"
 						:muted="true"
 						:enable-danmu="false"
@@ -30,7 +30,7 @@
 			<swiper-item>
 				<view class="swiper-item">
 					<image 
-						src="/static/ResourceFiles/bg1.jpg"
+						src="http://localhost:8080/bg/bg1.jpg"
 						mode="aspectFill"
 						@error="handleImageError"
 					></image>
@@ -70,20 +70,13 @@ export default {
 				this.videoContext.play()
 			}, 300)
 		},
-		pauseVideo() {
-			if (this.videoContext) {
-				this.videoContext.pause()
-			}
-		},
 		handleSwiperChange(e) {
 			const newIndex = e.detail.current
 			this.currentIndex = newIndex
 			
 			if (newIndex === 0 && this.isVideoReady) {
 				this.playVideo()
-			} else {
-				this.pauseVideo()
-			}
+			} 
 		}
 	},
 	mounted() {

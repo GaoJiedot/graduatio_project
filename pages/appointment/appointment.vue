@@ -139,6 +139,7 @@
 							icon: 'success'
 						});
 						this.getappointmentTime();
+						this.updateOrderStatus();
 						setTimeout(() => {
 							uni.navigateBack();
 						}, 1500);
@@ -155,14 +156,46 @@
 						icon: 'none'
 					});
 				}
+			},
+			updateOrderStatus() {
+				if(this.orderId){
+					uni.request({
+						url: `http://localhost:8080/order/finishorder/${this.orderId}`,
+						method: 'PATCH',
+						data: {
+							orderId: this.orderId,
+							orderStatus:2
+						},
+						success: (res) => {
+							console.log(res.data);
+						},
+						fail: (err) => {
+							console.error(err);
+						}
+					});
+				}
 			}
 		},
 		onLoad(options) {
+			console.log(options);
 			this.shopId = options.shopId;
 			this.userPhone = options.userPhone;
 			this.getshopInfo();
 			this.getappointmentTime();
+		},
+		onShow() {
+		    const currentPage = getCurrentPages().pop(); 
+		    const options = currentPage.options;
+		
+		    console.log('传递的参数:', options);
+		
+		    this.shopId = options.shopId;
+		    this.userPhone = options.userPhone;
+			this.orderId=options.orderId;
+			console.log(this.orderId);
+
 		}
+
 	};
 </script>
 

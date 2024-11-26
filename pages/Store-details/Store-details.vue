@@ -57,7 +57,7 @@
 						<text class="service-description">{{ service.description }}</text><br>
 						<text class="price">¥{{ service.tabulatePrice }}</text>
 					</view>
-					<button class="book-button">抢购</button>
+					<button class="book-button" @click="buy(service)">抢购</button>
 				</view>
 			</view>
 		</view>
@@ -140,6 +140,39 @@
 			tomap() {
 				uni.navigateTo({
 					url: "/pages/map/map"
+				})
+			},
+			buy(service){
+				uni.request({
+					url:`http://localhost:8080/order`,
+					method:'POST',
+					data:{
+						shopId:this.shop.shopId,
+						userId:this.userPhone,
+						userPhone:this.userPhone,
+						orderImage:service.tabulateImage,
+						orderName:service.tabulateName,
+						orderPrice:service.tabulatePrice,
+						orderTabs:service.tabulateTabs,
+						orderStatus:1	
+					},
+					success: (res) => {
+						console.log(res.data);
+						if(res.data.code==200){
+							uni.showToast({
+								title: '下单成功',
+								icon: 'success'
+							})
+						}else{
+							uni.showToast({
+								title: '下单失败',
+								icon: 'error'
+							})
+						}
+					},
+					fail: (err) => {
+						console.log(err);
+					}
 				})
 			}
 		},

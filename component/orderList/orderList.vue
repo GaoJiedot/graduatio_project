@@ -3,26 +3,19 @@
 		<!-- 第一个盒子 -->
 		<view class="box1">
 			<!-- 图片 -->
-			<img src="/static/logo.png" alt="" />
+			<img :src="orderdata.orderImage" alt="" />
 			<!-- 内容 -->
 			<view class="content">
 				<text>{{orderdata.orderName}}</text>
-
-			
-
 				<!-- 根据orderstate的值判断是否显示价格 -->
 				<view class="price-container" v-if="orderdata.orderStatus===1">
 					<text class="price">{{orderdata.orderPrice}}</text>
 				</view>
 			</view>
 		</view>
-
-	
-
-
 		<!-- 根据orderstate的值判断是否显示预约按钮 -->
 		<view class="touse" v-if="orderdata.orderStatus===1">
-			<button class="appointment-btn">去预约</button>
+			<button class="appointment-btn" @click="toapp">去预约</button>
 		</view>
 
 
@@ -33,6 +26,9 @@
 				<text>已使用</text>
 				<text class="used-date">2024-11-12</text>
 			</view>
+		</view>
+		<view class="touse" v-if="orderdata.orderStatus===2">
+			<button class="appointment-btn" @click="toeva">去评价</button>
 		</view>
 	</view>
 </template>
@@ -59,6 +55,18 @@
 					required: true
 
 				},
+				orderImage: {
+					type: String,
+					required: true
+				},
+				shopId: {
+					type: Number,
+					required: true
+				},
+				userPhone: {
+					type: String,
+					required: true
+				}
 
 			}
 
@@ -73,7 +81,16 @@
 			}
 		},
 		methods: {
-
+			toapp() {
+				uni.navigateTo({
+					url: `/pages/appointment/appointment?shopId=${this.orderdata.shopId}&userPhone=${this.orderdata.userPhone}&orderId=${this.orderdata.orderId}`
+				})
+			},
+			toeva(){
+				uni.navigateTo({
+					url: `/pages/evaluate/evaluate?shopId=${this.orderdata.shopId}&userPhone=${this.orderdata.userPhone}&orderId=${this.orderdata.orderId}`
+				})
+			}
 		}
 
 

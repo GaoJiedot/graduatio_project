@@ -69,7 +69,7 @@ export default {
     methods: {
         editShopInfo() {
             uni.navigateTo({
-                url: '/pages/edit-shop/edit-shop'
+                url: `/pages/edit-shop/edit-shop?shopId=${this.userInfo.shopId}`
             })
         },
         goToProductManagement() {

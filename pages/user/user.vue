@@ -18,16 +18,9 @@
 			<view class="other" @click="disclaimer">
 				免责条款
 			</view>
-			<view v-if="data.userType==1">
-				<view class="other" @click="apply" >
+				<view class="other" @click="apply" v-if="data.userType==2">
 					申请成为商家
 				</view>
-				<view class="other" @click="apply" v-if="data.applyStatus==0">
-					填写店铺信息
-				</view>
-			</view>
-
-
 		</view>
 		<button class="exitbtn" @click="eixtbtns">退出登录</button>
 	</view>
@@ -66,10 +59,7 @@
 					confirmText: '确定'
 				})
 			},
-			app(){
-				
-			},
-			applyshop() {
+			apply() {
 				uni.navigateTo({
 					url: `/pages/apply/apply?userId=${this.data.userId}`
 				});
@@ -80,7 +70,6 @@
 				key: 'userInfo',
 				success: (res) => {
 					this.data = res.data;
-					console.log("获取到的数据:", this.data);
 				}
 			});
 		},
