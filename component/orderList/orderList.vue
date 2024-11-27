@@ -24,18 +24,51 @@
 			<view class="used-status">
 				<text class="used-icon">✓</text>
 				<text>已使用</text>
-				<text class="used-date">2024-11-12</text>
+				<text class="used-date">{{this.orderdata.orderDate}}</text>
 			</view>
 		</view>
-		<view class="touse" v-if="orderdata.orderStatus===2">
-			<button class="appointment-btn" @click="toeva">去评价</button>
-		</view>
+		<view class="touse" v-if="orderdata.orderStatus === 2">
+					<button class="appointment-btn" @click="open" :disabled="!!orderdata.orderRating"
+						:class="{'rated': !!orderdata.orderRating}">
+						{{ orderdata.orderRating ? '已评价' : '去评价' }}
+					</button>
+				</view>
+		<uni-popup ref="popup" type="center" :animation="true">
+			<view class="rating-popup">
+				<view class="rating-title">
+					<text>服务评价</text>
+				</view>
+
+				<view class="rating-content">
+					<view class="rating-stars">
+						<uni-rate :value="rateValue" @change="rateChange" size="25" active-color="#ffd700"
+							margin="10" />
+					</view>
+
+					<view class="rating-label">
+						<text>{{ ratingLabels[rateValue] || '请点击星星评分' }}</text>
+					</view>
+					<view class="rating-buttons">
+						<button class="cancel-btn" @click="closePopup">取消</button>
+						<button class="submit-btn" :disabled="!rateValue" @click="submitRating">提交评价</button>
+					</view>
+				</view>
+			</view>
+		</uni-popup>
 	</view>
 </template>
 
 <script>
 	import timeSlotSelectorVue from '../time-slot-selector/time-slot-selector.vue';
+	import uniSection from '../../uni_modules/uni-rate/components/uni-rate/uni-rate.vue'
+	import uniRate from '../../uni_modules/uni-rate/components/uni-rate/uni-rate.vue'
+	import uniPop from '../../uni_modules/uni-popup/components/uni-popup/uni-popup.vue'
 	export default {
+		components: {
+			uniRate,
+			uniSection,
+			uniPop
+		},
 		props: {
 			orderdata: {
 				orderId: {
@@ -66,6 +99,10 @@
 				userPhone: {
 					type: String,
 					required: true
+				},
+				orderRating: {
+				    type: Number,
+				    default: 0
 				}
 
 			}
@@ -76,7 +113,15 @@
 		},
 		data() {
 			return {
-
+				rateValue: 0,
+				comment: '',
+				ratingLabels: {
+					1: '很不满意',
+					2: '不满意',
+					3: '一般',
+					4: '满意',
+					5: '非常满意'
+				}
 
 			}
 		},
@@ -86,11 +131,100 @@
 					url: `/pages/appointment/appointment?shopId=${this.orderdata.shopId}&userPhone=${this.orderdata.userPhone}&orderId=${this.orderdata.orderId}`
 				})
 			},
-			toeva(){
-				uni.navigateTo({
-					url: `/pages/evaluate/evaluate?shopId=${this.orderdata.shopId}&userPhone=${this.orderdata.userPhone}&orderId=${this.orderdata.orderId}`
+			open() {
+				this.$refs.popup.open('center')
+			},
+			closePopup() {
+				this.$refs.popup.close()
+			},
+			rateChange(e) {
+				this.rateValue = e.value
+			},
+			submitRating() {
+				uni.request({
+					url: `http://localhost:8080/order/rating/${this.orderdata.orderId}`,
+					method: 'PATCH',
+					data: {
+						orderId: this.orderdata.orderId,
+						orderRating: this.rateValue,
+						rateStatus: 1
+					},
+					success: (res) => {
+						if (res.data.code === 200) {
+							this.updateShopRating()
+							this.$emit('update:orderdata', {
+								...this.orderdata,
+								orderRating: this.rateValue
+							});
+							uni.showToast({
+								title: '评价成功',
+								icon: 'success'
+							})
+						} else {
+							uni.showToast({
+								title: '评价失败',
+								icon: 'none'
+							})
+						}
+					},
+					fail: (err) => {
+						uni.showToast({
+							title: '网络错误',
+							icon: 'none'
+						})
+					}
 				})
+				this.closePopup()
+			},
+			updateShopRating() {
+				uni.request({
+					url: `http://localhost:8080/order/getrating/${this.orderdata.shopId}`,
+					method: 'GET',
+					success: (res) => {
+						if (res.data && Array.isArray(res.data.data)) {
+							const validRatings = res.data.data.filter(order => order.orderRating);
+
+							if (validRatings.length > 0) {
+								const totalRating = validRatings.reduce((sum, order) => {
+									return sum + order.orderRating;
+								}, 0);
+
+								const averageRating = (totalRating / validRatings.length).toFixed(1);
+
+								console.log('店铺平均评分:', averageRating);
+
+								this.updateShopAverageRating(averageRating);
+							}
+						}
+					},
+					fail: (err) => {
+						console.error('获取评分失败:', err);
+					}
+				});
+			},
+
+			updateShopAverageRating(averageRating) {
+				uni.request({
+					url: `http://localhost:8080/shop/updaterating/${this.orderdata.shopId}`,
+					method: 'PATCH',
+					data: {
+						shopId: this.orderdata.shopId,
+						shopRating: averageRating
+					},
+					success: (res) => {
+						console.log('更新店铺评分成功');
+					},
+					fail: (err) => {
+						console.error('更新店铺评分失败:', err);
+					}
+				});
 			}
+		},
+		onLoad() {
+			this.updateShopRating()
+		},
+		onShow() {
+			this.updateShopRating()
 		}
 
 
@@ -107,6 +241,85 @@
 		margin-bottom: 15rpx;
 		padding-bottom: 20rpx;
 		position: relative;
+
+		.rating-popup {
+			width: 600rpx;
+			background-color: #fff;
+			border-radius: 20rpx;
+			padding: 30rpx;
+
+			.rating-title {
+				text-align: center;
+				margin-bottom: 30rpx;
+
+				text {
+					font-size: 32rpx;
+					font-weight: bold;
+					color: #333;
+				}
+			}
+
+			.rating-content {
+				.rating-stars {
+					display: flex;
+					justify-content: center;
+					margin: 20rpx 0;
+				}
+
+				.rating-label {
+					text-align: center;
+					margin: 20rpx 0;
+
+					text {
+						font-size: 28rpx;
+						color: #666;
+					}
+				}
+
+				.rating-input {
+					margin: 30rpx 0;
+
+					.comment-textarea {
+						width: 100%;
+						height: 200rpx;
+						padding: 20rpx;
+						box-sizing: border-box;
+						border: 2rpx solid #eee;
+						border-radius: 10rpx;
+						font-size: 28rpx;
+					}
+				}
+
+				.rating-buttons {
+					display: flex;
+					justify-content: space-between;
+					margin-top: 40rpx;
+
+					button {
+						width: 45%;
+						height: 80rpx;
+						line-height: 80rpx;
+						border-radius: 40rpx;
+						font-size: 28rpx;
+						border: none;
+
+						&.cancel-btn {
+							background-color: #f5f5f5;
+							color: #666;
+						}
+
+						&.submit-btn {
+							background: linear-gradient(to right, #3498db, #2980b9);
+							color: #fff;
+
+							&:disabled {
+								opacity: 0.6;
+							}
+						}
+					}
+				}
+			}
+		}
 
 		.box1 {
 			width: 100%;
@@ -193,6 +406,14 @@
 					transform: scale(0.98);
 					box-shadow: 0 2rpx 6rpx rgba(52, 152, 219, 0.3);
 				}
+				&:disabled {
+				        opacity: 0.7;
+				        cursor: not-allowed;
+				        
+				        &:active {
+				            transform: none;
+				        }
+				    }
 			}
 		}
 

@@ -164,7 +164,8 @@
 						method: 'PATCH',
 						data: {
 							orderId: this.orderId,
-							orderStatus:2
+							orderStatus:2,
+							orderDate:this.today
 						},
 						success: (res) => {
 							console.log(res.data);

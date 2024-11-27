@@ -237,9 +237,6 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-// 样式保持不变...
-</style>
 
 <style lang="scss" scoped>
 	.product-form-container {

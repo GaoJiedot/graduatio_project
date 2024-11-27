@@ -26,12 +26,6 @@
 			}
 		},
 		{
-			"path": "pages/share/share",
-			"style": {
-				"navigationBarTitleText": "分享"
-			}
-		},
-		{
 			"path": "component/list/list",
 			"style": {
 				"navigationBarTitleText": ""
@@ -105,12 +99,6 @@
 				"navigationBarTitleText": ""
 			}
 
-		},
-		{
-			"path": "pages/add/add",
-			"style": {
-				"navigationBarTitleText": "分享"
-			}
 		},
 		{
 			"path": "pages/forgetpage/forgetpage",
@@ -206,13 +194,6 @@
 			{
 				"navigationBarTitleText" : "今日预约"
 			}
-		},
-		{
-			"path" : "pages/evaluate/evaluate",
-			"style" : 
-			{
-				"navigationBarTitleText" : "评价"
-			}
 		}
 
 
@@ -245,12 +226,6 @@
 				"pagePath": "pages/index/index",
 				"iconPath": "static/icon/首页B.png",
 				"selectedIconPath": "static/icon/首页a.png"
-			},
-			{
-				"text": "分享",
-				"pagePath": "pages/share/share",
-				"iconPath": "static/icon/社区B.png",
-				"selectedIconPath": "static/icon/社区a.png"
 			},
 			{
 				"text": "消息",

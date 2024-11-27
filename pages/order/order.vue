@@ -24,6 +24,7 @@
 </template>
 <script>
 import OrderListVue from '../../component/orderList/orderList.vue'
+
 export default {
     components: {
         OrderListVue
@@ -53,7 +54,8 @@ export default {
                     console.error('Request failed:', err);
                 }
             });
-        }
+        },
+		
     },
     onLoad() {
      

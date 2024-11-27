@@ -16,7 +16,7 @@
 
 			<view class="form-item">
 				<text class="label">申请人真实姓名:</text>
-				<input class="input-field" v-model="shopInfo.shopKeeper" placeholder="请输入详细地址" />
+				<input class="input-field" v-model="shopInfo.shopKeeper" placeholder="请输入真实姓名" />
 			</view>
 		</view>
 		<view class="submit-btn" @click="saveShopInfo">
