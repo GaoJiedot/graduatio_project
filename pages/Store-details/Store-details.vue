@@ -80,6 +80,7 @@
 </template>
 
 <script>
+	import request from '@/utils/request.js'
 	export default {
 		data() {
 			return {
@@ -109,8 +110,8 @@
 				});
 			},
 			getStoreInfo() {
-				uni.request({
-					url: `http://localhost:8080/shop/${this.shop.shopId}`,
+				request.request({
+					url: `/shop/${this.shop.shopId}`,
 					method: 'GET',
 					data: {
 						shopId: this.shop.shopId
@@ -125,8 +126,8 @@
 				});
 			},
 			getServices() {
-				uni.request({
-					url: `http://localhost:8080/tabulate/getByShopId/${this.shop.shopId}`,
+				request.request({
+					url: `/tabulate/getByShopId/${this.shop.shopId}`,
 					method: 'GET',
 					success: (res) => {
 						console.log(res.data);
@@ -139,12 +140,12 @@
 			},
 			tomap() {
 				uni.navigateTo({
-					url: "/pages/map/map"
+					url: `/pages/map/map?shopName=${this.shop.shopName}&shopAddress=${this.shop.shopAddress}&shopBusinessHours=${this.shop.shopBusinessHours}`
 				})
 			},
 			buy(service){
-				uni.request({
-					url:`http://localhost:8080/order`,
+				request.request({
+					url:`/order`,
 					method:'POST',
 					data:{
 						shopId:this.shop.shopId,

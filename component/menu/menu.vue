@@ -56,8 +56,8 @@
 	        menutext: "申请管理"
 	      },
 	      {
-	        img: "/static/menuicon/更多.png",
-	        menutext: "待开发"
+	        img: "/static/menuicon/定制.png",
+	        menutext: "热门设置"
 	      }],
 	      marketersMenulist: [{
 	        img: "/static/menuicon/店铺.png",
@@ -89,7 +89,7 @@
 	  },
 	  methods: {
 	    getShopStatus() {
-	      if (!this.userInfo.shopId) return;
+	      if (!this.userInfo.shopId&&this.userInfo.userType===1) return;
 	      
 	      uni.request({
 	        url: `http://localhost:8080/shop/${this.userInfo.shopId}`,
@@ -125,6 +125,11 @@
 	            url: '/pages/apply-management/apply-management'
 	          });
 	          break;
+			  case 3:
+			    uni.navigateTo({
+			      url: '/pages/hot-search/hot-search'
+			    });
+			    break;
 	        default:
 	          uni.showToast({
 	            title: '功能开发中',

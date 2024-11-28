@@ -60,6 +60,7 @@
 </template>
 
 <script>
+	import request from '@/utils/request.js'
 export default {
 	data() {
 		return {
@@ -96,8 +97,8 @@ export default {
 				title: '加载中...'
 			});
 			
-			uni.request({
-				url: `http://localhost:8080/user/userId/${this.userId}`,
+			request.request({
+				url: `/user/userId/${this.userId}`,
 				method: 'GET',
 				success: (res) => {
 					if (res.data.code === 200 && res.data.data) {
@@ -162,8 +163,8 @@ export default {
 				delete requestData.password;
 			}
 			
-			uni.request({
-				url: `http://localhost:8080/user/update/${this.userId}`,
+			request.request({
+				url: `/user/update/${this.userId}`,
 				method: 'PATCH',
 				data: requestData,
 				success: (res) => {

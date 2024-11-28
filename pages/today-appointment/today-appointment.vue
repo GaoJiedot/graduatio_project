@@ -25,6 +25,7 @@
 </template>
 
 <script>
+	import request from '@/utils/request.js'
 	export default {
 		data() {
 			return {
@@ -58,8 +59,8 @@
 			    }
 			
 			    try {
-			        uni.request({
-			            url: `http://localhost:8080/appointments/reserved/${this.shopId}`,
+			        request.request({
+			            url: `/appointments/reserved/${this.shopId}`,
 			            data: {
 			                date: this.currentDate
 			            },

@@ -1,10 +1,10 @@
 <template>
 	<view class="container">
-		<view class="bglogin"><img src="static/ResourceFiles/bg1.jpg" alt="" /></view>
+		<view class="bglogin">
+			<img src="http://localhost:8080/bg/bg1.jpg" alt="" />
+		</view>
 		<view class="content">
-
 			<view class="title">用户登录</view>
-
 			<view class="welcome-text">欢迎使用</view>
 
 			<view v-if="!userInfo" class="userlogin">
@@ -19,7 +19,7 @@
 
 			<view v-if="userInfo" class="user-info">
 				<view class="avatar">
-				<image class="avatar-placeholder" :src="userAvatar || '/static/icon/logo.png'" />
+					<image class="avatar-image" :src="userInfo.userAvatar" />
 				</view>
 				<view class="welcome-back">欢迎回来</view>
 				<view class="user-id">{{ userInfo.userName }}</view>
@@ -30,6 +30,8 @@
 </template>
 
 <script>
+	import request from '@/utils/request.js'
+
 	export default {
 		data() {
 			return {
@@ -38,53 +40,53 @@
 				userInfo: null,
 				userName: '',
 				userAvatar: '',
-				userId:null
-			};
+				userId: null
+			}
 		},
 		methods: {
 			forgetbtn() {
 				uni.navigateTo({
-					url: "/pages/forgetpage/forgetpage"
+					url: '/pages/forgetpage/forgetpage'
 				})
 			},
 			registerbtn() {
 				uni.navigateTo({
-					url: "/pages/register/register"
+					url: '/pages/register/register'
 				})
 			},
 			validateUserAccount() {
-				const userAccountRegex = /^1[3-9]\d{9}$/;
+				const userAccountRegex = /^1[3-9]\d{9}$/
 				if (!userAccountRegex.test(this.userAccount)) {
 					uni.showToast({
 						title: '请输入正确的手机号',
 						icon: 'none'
-					});
-					return false;
+					})
+					return false
 				}
-				return true;
+				return true
 			},
 			validatePassword() {
 				if (this.password.length < 6) {
 					uni.showToast({
 						title: '密码长度不能少于6位',
 						icon: 'none'
-					});
-					return false;
+					})
+					return false
 				}
-				return true;
+				return true
 			},
 			login() {
 				if (!this.validateUserAccount() || !this.validatePassword()) {
-					return;
+					return
 				}
 
 				uni.showLoading({
 					title: '登录中...'
-				});
+				})
 
-				uni.request({
-					url: `http://localhost:8080/user/userAccount/${this.userAccount}`,
-					method: 'GET',
+				request.request({
+					url: '/user/login',
+					method: 'POST',
 					data: {
 						userAccount: this.userAccount,
 						password: this.password
@@ -92,94 +94,67 @@
 					success: (res) => {
 						console.log(res.data)
 						if (res.data.code === 200 && res.data.data) {
-							uni.request({
-								url: `http://localhost:8080/user/login`,
-								method: 'POST',
-								data: {
-									userAccount: this.userAccount,
-									password: this.password
-								},
-								success: (res) => {
-									console.log(res.data)
-									if (res.data.code === 200 && res.data.data) {
-										const userInfo = {
-											...res.data.data,
-											token: res.data.data.token,
-											userName: res.data.data.userName,
-											userAvatar: res.data.data.userAvatar,
-											userId: res.data.data.userId,
-											loginTime: new Date().getTime()
-											
-										};
+							const userInfo = {
+								...res.data.data,
+								token: res.data.data.token,
+								userName: res.data.data.userName,
+								userAvatar: res.data.data.userAvatar,
+								userId: res.data.data.userId,
+								loginTime: new Date().getTime()
+							}
 
-										uni.removeStorageSync('userInfo');
+							uni.setStorageSync('userInfo', userInfo)
+							this.userInfo = userInfo
 
-										uni.setStorageSync('userInfo', userInfo);
-										this.userInfo = userInfo;
+							uni.showToast({
+								title: '登录成功',
+								icon: 'success'
+							})
 
-										uni.showToast({
-											title: '登录成功',
-											icon: 'success'
-										});
-
-										setTimeout(() => {
-											uni.switchTab({
-												url: "/pages/index/index"
-											});
-										}, 1500);
-									} else {
-										uni.showToast({
-											title: res.data.message,
-											icon: 'none'
-										});
-									}
-								},
-
-							});
-
+							setTimeout(() => {
+								uni.switchTab({
+									url: '/pages/index/index'
+								})
+							}, 1500)
 						} else {
 							uni.showToast({
 								title: res.data.message,
 								icon: 'none'
-							});
-							uni.hideLoading();
+							})
+							uni.hideLoading()
 						}
 					},
 					fail: (err) => {
 						uni.showToast({
 							title: '网络错误，请稍后重试',
 							icon: 'none'
-						});
-						uni.hideLoading();
+						})
+						uni.hideLoading()
 					}
-				});
+				})
 			},
-
-
 			checkLoginStatus() {
-				const userInfo = uni.getStorageSync('userInfo');
+				const userInfo = uni.getStorageSync('userInfo')
 				if (userInfo) {
-					const currentTime = new Date().getTime();
-					const loginTime = userInfo.loginTime;
+					const currentTime = new Date().getTime()
+					const loginTime = userInfo.loginTime
 
 					if (currentTime - loginTime < 7 * 24 * 60 * 60 * 1000) {
-						this.userInfo = userInfo;
+						this.userInfo = userInfo
 						uni.switchTab({
-							url: "/pages/index/index"
-						});
+							url: '/pages/index/index'
+						})
 					} else {
-						uni.removeStorageSync('userInfo');
-						this.userInfo = null;
+						uni.removeStorageSync('userInfo')
+						this.userInfo = null
 					}
 				}
 			}
 		},
 		onLoad() {
-			let token = uni.getStorageSync('token');
-        
-			this.checkLoginStatus();
+			this.checkLoginStatus()
 		}
-	};
+	}
 </script>
 
 <style lang="scss" scoped>
@@ -236,13 +211,11 @@
 				.forget {
 					margin-right: 80rpx;
 					color: #3B82F6;
-
 				}
 
 				.register {
 					color: #3B82F6;
 				}
-
 			}
 		}
 
@@ -290,16 +263,16 @@
 				width: 120rpx;
 				height: 120rpx;
 				border-radius: 60rpx;
-				background: #4CAF50;
 				margin: 0 auto 20rpx;
 				display: flex;
 				align-items: center;
 				justify-content: center;
+				overflow: hidden;
 
-				.avatar-placeholder {
-					color: white;
-					font-size: 48rpx;
-					font-weight: 600;
+				.avatar-image {
+					width: 100%;
+					height: 100%;
+					object-fit: cover;
 				}
 			}
 

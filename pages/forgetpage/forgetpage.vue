@@ -1,7 +1,7 @@
 <template>
 	<view class="container">
 		<view class="bglogin">
-			<img src="static/ResourceFiles/bg1.jpg" alt="" />
+			<img src="http://localhost:8080/bg/bg1.jpg" alt="" />
 		</view>
 		<view class="content">
 			<view class="title">修改密码</view>
@@ -27,6 +27,7 @@
 	</view>
 </template>
 <script>
+	import request from '@/utils/request.js'
 	export default {
 		data() {
 			return {
@@ -61,8 +62,8 @@
 				}
 
 				try {
-					const result = await uni.request({
-						url: `http://localhost:8080/user/sendcode?email=${encodeURIComponent(this.email)}`,
+					const result = await request.request({
+						url: `/user/sendcode?email=${encodeURIComponent(this.email)}`,
 						method: 'GET'
 					});
 
@@ -134,8 +135,8 @@
 			},
 			async verifyCode() {
 				try {
-					const result = await uni.request({
-						url: `http://localhost:8080/user/verifycode`,
+					const result = await request.request({
+						url: `/user/verifycode`,
 						method: 'POST',
 						header: {
 							'Content-Type': 'application/x-www-form-urlencoded'
@@ -177,8 +178,8 @@
 				}
 
 				try {
-					const checkUserResult = await uni.request({
-						url: `http://localhost:8080/user/userAccount/${this.userAccount}`,
+					const checkUserResult = await request.request({
+						url: `/user/userAccount/${this.userAccount}`,
 						method: 'GET'
 					});
 
@@ -190,8 +191,8 @@
 						return;
 					}
 
-					const updateResult = await uni.request({
-						url: 'http://localhost:8080/user/updatePassword',
+					const updateResult = await request.request({
+						url: '/user/updatePassword',
 						method: 'PUT',
 						data: {
 							userAccount: this.userAccount,

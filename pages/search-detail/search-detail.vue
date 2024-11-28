@@ -33,7 +33,7 @@
 
 <script>
 	import listVue from '../../component/list/list.vue';
-
+	import request from '@/utils/request.js'
 	export default {
 		components: {
 			listVue
@@ -152,59 +152,62 @@
 			// },
 
 			handleSearch() {
-				if (!this.searchQuery.trim()) {
-					uni.showToast({
-						title: '请输入有效的搜索关键词',
-						icon: 'none'
-					});
-					return;
-				}
-
-				// if (!this.userLocation.latitude || !this.userLocation.longitude) {
-				// 	uni.showToast({
-				// 		title: '未获取到位置信息',
-				// 		icon: 'none'
-				// 	});
-				// 	return;
-				// }
-
-				uni.showLoading({
-					title: '搜索中...'
-				});
-
-				const url = `http://localhost:8080/tabulate/search/${encodeURIComponent(this.searchQuery)}`;
-				console.log('请求 URL:', url);
-
-				uni.request({
-					url: url,
-					method: 'GET',
-					data: {
-						latitude: this.userLocation.latitude,
-						longitude: this.userLocation.longitude
-					},
-					success: (res) => {
-						console.log('后端返回的数据:', res.data);
-						if (res.data && res.data.data && res.data.data.length > 0) {
-							this.data = res.data.data.map(item => ({
-								...item,
-								tabulateTabs: item.tabulateTabs ? item.tabulateTabs.split(',') : []
-							}));
-						} else {
-							this.data = [];
-						}
-						this.hasSearched = true;
-					},
-					fail: (err) => {
-						console.error('请求失败:', err);
-						uni.showToast({
-							title: '搜索失败，请稍后重试',
-							icon: 'none'
-						});
-					},
-					complete: () => {
-						uni.hideLoading();
-					}
-				});
+			  if (!this.searchQuery.trim()) {
+			    uni.showToast({
+			      title: '请输入有效的搜索关键词',
+			      icon: 'none'
+			    });
+			    return;
+			  }
+			
+			  // 如果位置为空，则提示
+			//   if (!this.userLocation.latitude || !this.userLocation.longitude) {
+			//     uni.showToast({
+			//       title: '未获取到位置信息',
+			//       icon: 'none'
+			//     });
+			//     return;
+			//   }
+			
+			//   uni.showLoading({
+			//     title: '搜索中...'
+			//   });
+			
+			  // 这里拼接请求的 URL
+			  const url = `/tabulate/search/${encodeURIComponent(this.searchQuery)}`;
+			
+			  console.log('请求 URL:', url);
+			
+			  request.request({
+			    url: url,  // 传递拼接后的 URL
+			    method: 'GET',
+			    data: {
+			      latitude: this.userLocation.latitude,
+			      longitude: this.userLocation.longitude
+			    },
+			    success: (res) => {
+			      console.log('后端返回的数据:', res.data);
+			      if (res.data && res.data.data && res.data.data.length > 0) {
+			        this.data = res.data.data.map(item => ({
+			          ...item,
+			          tabulateTabs: item.tabulateTabs ? item.tabulateTabs.split(',') : []
+			        }));
+			      } else {
+			        this.data = [];
+			      }
+			      this.hasSearched = true;
+			    },
+			    fail: (err) => {
+			      console.error('请求失败:', err);
+			      uni.showToast({
+			        title: '搜索失败，请稍后重试',
+			        icon: 'none'
+			      });
+			    },
+			    complete: () => {
+			      uni.hideLoading();
+			    }
+			  });
 			},
 
 			// 跳转到详情页

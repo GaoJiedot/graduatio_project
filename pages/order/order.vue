@@ -24,7 +24,7 @@
 </template>
 <script>
 import OrderListVue from '../../component/orderList/orderList.vue'
-
+import request from '@/utils/request.js'
 export default {
     components: {
         OrderListVue
@@ -43,8 +43,8 @@ export default {
             this.fetchOrderData(index + 1);
         },
         fetchOrderData(status) {
-            uni.request({
-                url: `http://localhost:8080/order/status/${status}`,
+            request.request({
+                url: `/order/status/${status}`,
                 method: 'GET',
                 success: (res) => {
                     this.orderdata = res.data.data;

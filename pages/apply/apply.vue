@@ -27,6 +27,7 @@
 </template>
 
 <script>
+	import request from '@/utils/request.js'
 	export default {
 		data() {
 			return {
@@ -40,46 +41,46 @@
 			}
 		},
 		methods: {
-			 saveShopInfo() {
-			      if (!this.validateForm()) {
-			        return;
-			      }
-			
-			      if (!this.userId) {
-			        uni.showToast({
-			          title: '用户信息获取失败',
-			          icon: 'none'
-			        });
-			        return;
-			      }
-			
-			      uni.request({
-			        url: `http://localhost:8080/temporary`,
-			        method: 'POST',
-			        data: {
-			          shopName: this.shopInfo.shopName,
-			          shopPhone: this.shopInfo.shopPhone,
-			          shopKeeper: this.shopInfo.shopKeeper,
-					  userId: this.userId
-			        },
-			        success: (res) => {
+			saveShopInfo() {
+				if (!this.validateForm()) {
+					return;
+				}
+
+				if (!this.userId) {
+					uni.showToast({
+						title: '用户信息获取失败',
+						icon: 'none'
+					});
+					return;
+				}
+
+				request.request({
+					url: `/temporary`,
+					method: 'POST',
+					data: {
+						shopName: this.shopInfo.shopName,
+						shopPhone: this.shopInfo.shopPhone,
+						shopKeeper: this.shopInfo.shopKeeper,
+						userId: this.userId
+					},
+					success: (res) => {
 						uni.showToast({
 							title: '申请已提交',
 							icon: 'success'
 						});
-						
+
 						setTimeout(() => {
 							uni.navigateBack();
 						}, 1500);
-			        },
-			        fail: (err) => {
-			          uni.showToast({
-			            title: '网络错误',
-			            icon: 'none'
-			          });
-			        }
-			      })
-			    },
+					},
+					fail: (err) => {
+						uni.showToast({
+							title: '网络错误',
+							icon: 'none'
+						});
+					}
+				})
+			},
 			validateForm() {
 				const {
 					shopName,
@@ -114,11 +115,11 @@
 				return true;
 			}
 		},
-		 onLoad(options) {
-		    if (options && options.userId) {
-		      this.userId = options.userId;
-		    }
-		  }
+		onLoad(options) {
+			if (options && options.userId) {
+				this.userId = options.userId;
+			}
+		}
 	}
 </script>
 <style lang="scss" scoped>

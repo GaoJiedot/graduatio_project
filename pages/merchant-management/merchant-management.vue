@@ -45,6 +45,7 @@
 </template>
 
 <script>
+import request from '@/utils/request.js'
 export default {
 	data() {
 		return {
@@ -56,8 +57,8 @@ export default {
 	},
 	methods: {
 		getShop() {
-			uni.request({
-				url: `http://localhost:8080/shop/admin/all`,
+			request.request({
+				url: `/shop/admin/all`,
 				method: 'GET',
 				success: (res) => {
 					if (res.data.code === 200) {
@@ -92,8 +93,8 @@ export default {
 					content: `确认下架店铺 ${merchant.shopName} 吗？`,
 					success: (res) => {
 						if (res.confirm) {
-							uni.request({
-								url: `http://localhost:8080/shop/${merchant.shopId}`,
+							request.request({
+								url: `/shop/${merchant.shopId}`,
 								method: 'DELETE',
 								success: (res) => {
 									if (res.data.code === 200) {
@@ -132,8 +133,8 @@ export default {
 				title: '搜索中...'
 			});
 			
-			uni.request({
-				url: `http://localhost:8080/shop/shop/${this.searchQuery}`,
+			request.request({
+				url: `/shop/shop/${this.searchQuery}`,
 				method: 'GET',
 				data: {
 					query: this.searchQuery,

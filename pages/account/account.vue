@@ -13,6 +13,7 @@
 </template>
 
 <script>
+	import request from '@/utils/request.js'
 	export default {
 		data() {
 			return {
@@ -44,56 +45,52 @@
 			},
 
 			async uploadFile() {
-				return new Promise((resolve, reject) => {
-					if (!this.tempFilePath) {
-						resolve(null); 
-						return;
-					}
-
-					uni.uploadFile({
-						url: `http://localhost:8080/user/uploadAvatar/${this.data.userId}`,
-						filePath: this.tempFilePath,
-						name: 'file',
-						success: (uploadRes) => {
-							try {
-								const result = JSON.parse(uploadRes.data);
-								if (result.code === 200) {
-									resolve(result.data);
-								} else {
-									reject(new Error(result.message || '上传失败'));
-								}
-							} catch (e) {
-								reject(new Error('处理响应失败'));
-							}
-						},
-						fail: (err) => {
-							reject(new Error('上传失败'));
-						}
-					});
-				});
+			  if (!this.tempFilePath) {
+			    return null
+			  }
+			  
+			  return new Promise((resolve, reject) => {
+			    request.uploadFile({
+			      url: `/user/uploadAvatar/${this.data.userId}`,
+			      filePath: this.tempFilePath,
+			      name: 'file',
+			      success: (uploadRes) => {
+			        try {
+			          const result = JSON.parse(uploadRes.data)
+			          if (result.code === 200) {
+			            resolve(result.data)
+			          } else {
+			            reject(new Error(result.message || '上传失败'))
+			          }
+			        } catch (e) {
+			          reject(new Error('处理响应失败'))
+			        }
+			      },
+			      fail: (err) => {
+			        reject(new Error('上传失败'))
+			      }
+			    })
+			  })
 			},
 
 			async updateUserInfo(updateData) {
-				return new Promise((resolve, reject) => {
-					uni.request({
-						url: 'http://localhost:8080/user',
-						method: 'PUT',
-						header: {
-							'Content-Type': 'application/json'
-						},
-						data: updateData,
-						success: (res) => {
-							if (res.data.code === 200) {
-								resolve(res.data);
-							} else {
-								reject(new Error(res.data.message || '更新失败'));
-							}
-						},
-						fail: (err) => {
-							reject(new Error('网络请求失败'));
-						}
-					});
-				});
+			  return new Promise((resolve, reject) => {
+			    request.request({
+			      url: '/user',
+			      method: 'PUT', 
+			      data: updateData,
+			      success: (res) => {
+			        if (res.data.code === 200) {
+			          resolve(res.data)
+			        } else {
+			          reject(new Error(res.data.message || '更新失败'))
+			        }
+			      },
+			      fail: (err) => {
+			        reject(new Error('网络请求失败'))
+			      }
+			    })
+			  })
 			},
 
 			async submitbtn() {

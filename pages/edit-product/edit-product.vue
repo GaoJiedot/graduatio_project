@@ -40,6 +40,7 @@
 </template>
 
 <script>
+	import request from '@/utils/request.js'
 	export default {
 		data() {
 			return {
@@ -61,8 +62,8 @@
 		onLoad(options) {
 			this.productId = options.productId;
 			console.log('loadProductData:', this.productId);
-			uni.request({
-				url: `http://localhost:8080/tabulate/${this.productId}`,
+			request.request({
+				url: `/tabulate/${this.productId}`,
 				method: 'GET',
 				success: (res) => {
 					console.log('loadProductData:', res.data);
@@ -129,8 +130,8 @@
 			},
 			async uploadImage(productId, filePath) {
 			  try {
-			    const uploadResult = await uni.uploadFile({
-			      url: `http://localhost:8080/tabulate/uploadTabulateImages/${productId}`,
+			    const uploadResult = await request.uploadFile({
+			      url: `/tabulate/uploadTabulateImages/${productId}`,
 			      filePath: filePath,
 			      name: 'file', 
 			      formData: {
@@ -159,8 +160,8 @@
 			        this.formData.tabulateImage = imageUrl; 
 			      }
 			
-			      const res = await uni.request({
-			        url: `http://localhost:8080/tabulate/update`,
+			      const res = await request.request({
+			        url: `/tabulate/update`,
 			        method: 'PUT',
 			        data: this.formData
 			      });

@@ -1,6 +1,6 @@
 <template>
 	<view class="container">
-		<view class="bglogin"><img src="static/ResourceFiles/bg1.jpg" alt="" /></view>
+		<view class="bglogin"><img src="http://localhost:8080/bg/bg1.jpg" alt="" /></view>
 		<view class="content">
 			<view class="title">用户注册</view>
 			<view class="welcome-text">欢迎使用</view>
@@ -20,6 +20,7 @@
 	</view>
 </template>
 <script>
+	import request from '@/utils/request.js'
 	export default {
 		data() {
 			return {
@@ -83,8 +84,8 @@
 				});
 
 
-				uni.request({
-					url: `http://localhost:8080/user/userAccount/${this.userAccount}`,
+				request.request({
+					url: `/user/userAccount/${this.userAccount}`,
 					method: 'GET',
 
 					success: (res) => {
@@ -103,8 +104,8 @@
 
 						} else if (res.data.code === 500) {
 							const randomUserName = this.generateRandomUserName();
-							uni.request({
-								url: 'http://localhost:8080/user',
+							request.request({
+								url: '/user',
 								method: 'POST',
 								data: {
 									userAccount: this.userAccount,

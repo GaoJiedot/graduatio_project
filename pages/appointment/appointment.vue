@@ -30,6 +30,7 @@
 </template>
 
 <script>
+	import request from '@/utils/request.js'
 	export default {
 		data() {
 			return {
@@ -70,8 +71,8 @@
 				}
 			},
 			getshopInfo() {
-				uni.request({
-					url: `http://localhost:8080/shop/${this.shopId}`,
+				request.request({
+					url: `/shop/${this.shopId}`,
 					method: 'GET',
 					data: {
 						shopId: this.shopId
@@ -87,8 +88,8 @@
 				});
 			},
 			getappointmentTime() {
-				uni.request({
-					url: `http://localhost:8080/appointments/reserved/${this.shopId}`,
+				request.request({
+					url: `/appointments/reserved/${this.shopId}`,
 					method: 'GET',
 					data: {
 						shopId: this.shopId,
@@ -128,8 +129,8 @@
 					appointmentTime
 				};
 				try {
-					const response = await uni.request({
-						url: 'http://localhost:8080/appointments',
+					const response = await request.request({
+						url: '/appointments',
 						method: 'POST',
 						data: appointment
 					});
@@ -159,8 +160,8 @@
 			},
 			updateOrderStatus() {
 				if(this.orderId){
-					uni.request({
-						url: `http://localhost:8080/order/finishorder/${this.orderId}`,
+					request.request({
+						url: `/order/finishorder/${this.orderId}`,
 						method: 'PATCH',
 						data: {
 							orderId: this.orderId,

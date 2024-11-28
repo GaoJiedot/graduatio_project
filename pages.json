@@ -194,6 +194,13 @@
 			{
 				"navigationBarTitleText" : "今日预约"
 			}
+		},
+		{
+			"path" : "pages/hot-search/hot-search",
+			"style" : 
+			{
+				"navigationBarTitleText" : "热门设置"
+			}
 		}
 
 
@@ -212,7 +219,18 @@
 		"softinputMode": "adjustResize",
 		"modules": {
 		            "VideoPlayer": {}
-		        }
+		        },
+			"plugins": {
+			    "map": {
+			      "version": "2.0.0",
+			      "provider": "wx"
+			    }
+			  },
+			  "permission": {
+			    "scope.location": {
+			      "desc": "需要获取您的位置信息"
+			    }
+			  }	
 	},
 
 

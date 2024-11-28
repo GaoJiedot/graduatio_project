@@ -28,6 +28,7 @@
 </template>
 
 <script>
+	import request from '@/utils/request.js'
 	export default {
 		data() {
 			return {
@@ -53,8 +54,8 @@
 					content: '确定要下架该商品吗？',
 					success: (res) => {
 						if (res.confirm) {
-							uni.request({
-								url: `http://localhost:8080/tabulate/${product.tabulateId}`,
+							request.request({
+								url: `/tabulate/${product.tabulateId}`,
 								method: 'DELETE',
 								success: (res) => {
 									if (res.data.code === 200) {
@@ -76,8 +77,8 @@
 				})
 			},
 			getProductList() {
-				uni.request({
-					url: `http://localhost:8080/tabulate/getByShopId/${this.shopId}`,
+				request.request({
+					url: `/tabulate/getByShopId/${this.shopId}`,
 					method: 'GET',
 					success: (res) => {
 						this.productList = res.data.data

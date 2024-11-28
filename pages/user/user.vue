@@ -3,7 +3,7 @@
 		<view class="uersbox">
 			<view class="user-info-box">
 				<view class="user-info">
-					<image class="avatar" :src="data.userAvatar || '/static/icon/logo.png'" />
+					<image class="avatar" :src="data.userAvatar" />
 					<view class="user-details">
 						<text class="username">{{data.userName}}</text>
 						<text class="user-id">ID:{{data.userId}}</text>
@@ -27,6 +27,7 @@
 </template>
 
 <script>
+	import request from '@/utils/request.js'
 	export default {
 		data() {
 			return {

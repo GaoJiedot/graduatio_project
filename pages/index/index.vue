@@ -21,7 +21,7 @@
 	import listVue from '../../component/list/list.vue';
 	import menuVue from '../../component/menu/menu.vue';
 	import marginSwiperVue from 'component/margin-swiper/margin-swiper.vue';
-
+	import request from '@/utils/request.js'
 	export default {
 
 		components: {
@@ -71,8 +71,8 @@
 			},
 			// 获取列表数据
 			getListData() {
-				uni.request({
-					url: 'http://localhost:8080/tabulate/type/1',
+				request.request({
+					url: '/tabulate/type/1',
 					method: 'GET',
 					success: (res) => {
 						if (res.data.code === 200) {

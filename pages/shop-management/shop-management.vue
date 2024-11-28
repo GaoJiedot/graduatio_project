@@ -57,6 +57,7 @@
     </view>
 </template>
 <script>
+	import request from '@/utils/request.js'
 export default {
     data() {
         return {
@@ -97,8 +98,8 @@ export default {
         },
         async getShopInfo() {
             return new Promise((resolve, reject) => {
-                uni.request({
-                    url: `http://localhost:8080/shop/${this.userInfo.shopId}`,
+                request.request({
+                    url: `/shop/${this.userInfo.shopId}`,
                     method: 'GET',
                     success: (res) => {
                         if (!res.data.data) {

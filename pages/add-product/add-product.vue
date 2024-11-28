@@ -47,6 +47,7 @@
 </template>
 
 <script>
+import request from '@/utils/request.js'
 export default {
 	data() {
 		return {
@@ -122,8 +123,8 @@ export default {
 					title: '提交商品信息...'
 				});
 
-				const res = await uni.request({
-					url: 'http://localhost:8080/tabulate/add',
+				const res = await request.request({
+					url: '/tabulate/add',
 					method: 'POST',
 					data: this.formData
 				});
@@ -164,8 +165,8 @@ export default {
 					title: '上传图片中...'
 				});
 
-				const uploadResult = await uni.uploadFile({
-					url: `http://localhost:8080/tabulate/uploadTabulateImages/${this.productId}`,
+				const uploadResult = await request.uploadFile({
+					url: `/tabulate/uploadTabulateImages/${this.productId}`,
 					filePath: this.tempFilePath,
 					name: 'file'
 				});
@@ -186,8 +187,8 @@ export default {
 
 		async updateProduct() {
 			try {
-				const res = await uni.request({
-					url: 'http://localhost:8080/tabulate/update',
+				const res = await request.request({
+					url: '/tabulate/update',
 					method: 'PUT',
 					data: {
 						tabulateId: this.productId,

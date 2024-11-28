@@ -12,7 +12,7 @@
 				<view class="swiper-item video-item">
 					<video 
 						id="myVideo" 
-						src="http://localhost:8080/bg/bgvideo.mp4"
+						:src="videourl"
 						:autoplay="true"
 						:loop="true"
 						:muted="true"
@@ -44,6 +44,7 @@
 export default {
 	data() {
 		return {
+			videourl:'http://localhost:8080/bg/bgvideo.mp4',
 			currentIndex: 0,
 			isVideoReady: false
 		}
@@ -84,7 +85,6 @@ export default {
 	},
 	beforeDestroy() {
 		if (this.videoContext) {
-			this.pauseVideo()
 			this.videoContext = null
 		}
 	}

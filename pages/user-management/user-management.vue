@@ -52,6 +52,7 @@
 	</view>
 </template>
 <script>
+	import request from '@/utils/request.js'
 	export default {
 		data() {
 			return {
@@ -115,8 +116,8 @@
 			            content: `是否删除选中的 ${selectedUserIds.length} 个用户？`,
 			            success: (res) => {
 			                if (res.confirm) {
-			                    uni.request({
-			                        url: 'http://localhost:8080/admin/batch',
+			                    request.request({
+			                        url: '/admin/batch',
 			                        method: 'DELETE',
 			                        data: selectedUserIds,
 			                        success: (res) => {
@@ -153,8 +154,8 @@
 			    },
 
 			performBatchDelete(userIds) {
-				uni.request({
-					url: 'http://localhost:8080/user/batch',
+				request.request({
+					url: '/user/batch',
 					method: 'DELETE',
 					data: {
 						userIds: userIds
@@ -198,8 +199,8 @@
 					content: `是否删除用户 ${user.userName}？`,
 					success: (res) => {
 						if (res.confirm) {
-							uni.request({
-								url: `http://localhost:8080/user/${user.userId}`,
+							request.request({
+								url: `/user/${user.userId}`,
 								method: 'DELETE',
 								success: (res) => {
 									if (res.data.code === 200) {
@@ -229,8 +230,8 @@
 			},
 			// 获取用户列表
 			getuser(page = 1) {
-				uni.request({
-					url: `http://localhost:8080/user/admin?page=${page}&limit=${this.pageSize}`,
+				request.request({
+					url: `/user/admin?page=${page}&limit=${this.pageSize}`,
 					method: 'GET',
 					success: (res) => {
 						this.userList = res.data.data || [];
@@ -259,8 +260,8 @@
 					return;
 				}
 
-				uni.request({
-					url: `http://localhost:8080/user/userAccount/${this.searchQuery}`,
+				request.request({
+					url: `/user/userAccount/${this.searchQuery}`,
 					method: 'GET',
 					success: (res) => {
 						if (res.data.code === 200) {

@@ -26,6 +26,7 @@
 </template>
 
 <script>
+	import request from '@/utils/request.js'
 export default {
 	data() {
 		return {
@@ -38,8 +39,8 @@ export default {
 	},
 	methods: {
 		getApplymentList() {
-			uni.request({
-				url: 'http://localhost:8080/temporary/admin',
+			request.request({
+				url: '/temporary/admin',
 				method: 'GET',
 				success: (res) => {
 					console.log(res.data);
@@ -58,7 +59,7 @@ export default {
 			try {
 				// First create the shop
 				const shopResponse = await uni.request({
-					url: `http://localhost:8080/shop`,
+					url: `/shop`,
 					method: 'POST',
 					data: {
 						...item
@@ -72,8 +73,8 @@ export default {
 				const newShopId = shopResponse.data.data.shopId;
 
 				// Then update the user type and shop ID
-				const updateResponse = await uni.request({
-					url: `http://localhost:8080/user/updateApply/${item.userId}`,
+				const updateResponse = await request.request({
+					url: `/user/updateApply/${item.userId}`,
 					method: 'PATCH',
 					data: {
 						userType: 1,  // Make sure this matches your expected enum/constant
@@ -102,8 +103,8 @@ export default {
 			}
 		},
 		rejectApplication(item) {
-			uni.request({
-				url: `http://localhost:8080/temporary/admin/${item.shopId}`,
+			request.request({
+				url: `/temporary/admin/${item.shopId}`,
 				method: 'DELETE',
 				success: (res) => {
 					console.log(res.data);
