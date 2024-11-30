@@ -1,128 +1,128 @@
 <template>
 	<view class="page">
-		<view class="list-item" v-for="(item,index) in users" :key="index" @click="connect(item)">
+		<view class="list-item" v-for="(item, index) in chatList" :key="index" @click="connect(item)">
 			<view class="avatar">
-				<text class="round" v-if="item.read"></text>
-				<image :src="item.avatar" mode="widthFix"></image>
+				<text class="round" v-if="item.unreadStatus === 0"></text>
+				<image :src="item.friendAvatar" mode="widthFix"></image>
 			</view>
 			<view class="content">
 				<view class="title">
-					<text class="name">{{ item.name }}</text>
-					<text class="time">{{ item.time }}</text>
+					<text class="name">{{ item.friendName }}</text>
+					<text class="time">{{ item.sendTime }}</text>
 				</view>
-				<view class="txt">{{ item.msg }}</view>
+				<view class="txt">{{ item.content }}</view>
 			</view>
-
 		</view>
 	</view>
 </template>
 
 <script>
-	 //import swipeAction from 'component/uni-swipe-action/uni-swipe-action.vue'
+	import request from '@/utils/request.js';
+
+	const WS_URL = 'ws://localhost:8080';
+
 	export default {
-		components: {
-			//swipeAction
-		},
 		data() {
 			return {
-				options: [{
-					text: '取消',
-					style: {
-						backgroundColor: '#007aff'
-					}
-				}, {
-					text: '确认',
-					style: {
-						backgroundColor: '#dd524d'
-					}
-				}],
-				users: [{
-						avatar: '/static/avatar/avatar1.png',
-						name: '杨涛',
-						read: 1,
-						time: '23:59',
-						msg: '没有消息就是最好的消息'
-					},
-					{
-						avatar: '/static/avatar/avatar2.jpg',
-						name: '雨中漫步',
-						read: 1,
-						time: '23:59',
-						msg: '没有消息就是最好的消息'
-					},
-					{
-						avatar: '/static/avatar/avatar3.jpeg',
-						name: '糖果梦境',
-						read: 1,
-						time: '23:59',
-						msg: '没有消息就是最好的消息'
-					},
-					{
-						avatar: '/static/avatar/avatar4.png',
-						name: '海上日落',
-						read: 1,
-						time: '23:59',
-						msg: '没有消息就是最好的消息'
-					},
-					{
-						avatar: '/static/avatar/avatar6.png',
-						name: '男朋友',
-						read: 1,
-						time: '23:59',
-						msg: '没有消息就是最好的消息'
-					},
-					{
-						avatar: '/static/avatar/avatar8.png',
-						name: '女朋友',
-						read: 1,
-						time: '23:59',
-						msg: '没有消息就是最好的消息'
-					},
-					{
-						avatar: '/static/avatar/avatar5.jpeg',
-						name: '静谧之夜',
-						read: 1,
-						time: '23:59',
-						msg: '没有消息就是最好的消息'
-					},
-					{
-						avatar: '/static/avatar/avatar1.png',
-						name: '风吹麦浪',
-						read: 0,
-						time: '23:59',
-						msg: '没有消息就是最好的消息'
-					},
-					{
-						avatar: '/static/avatar/avatar1.png',
-						name: '路过岁月',
-						read: 0,
-						time: '23:59',
-						msg: '没有消息就是最好的消息'
-					},
-					{
-						avatar: '/static/avatar/avatar1.png',
-						name: '繁星点点',
-						read: 0,
-						time: '23:59',
-						msg: '没有消息就是最好的消息'
-					}
-				]
+				userId: '',
+				websocket: null,
+				chatList: [],
 			};
 		},
+
+		onLoad() {
+			// Load user info from storage
+			uni.getStorage({
+				key: 'userInfo',
+				success: (res) => {
+					this.userId = res.data.userId;
+				}
+			});
+
+			this.initWebSocket();
+			this.loadChatList();
+		},
+
+		onUnload() {
+			this.closeWebSocket();
+		},
+
 		methods: {
-			onClick(e) {
-				console.log('点击了' + (e.position === 'left' ? '左侧' : '右侧') + e.content.text + '按钮')
+			initWebSocket() {
+			            this.websocket = uni.connectSocket({
+			                url: `${WS_URL}/websocket/${this.userId}`,
+			                complete: () => {}
+			            });
+			
+			            this.websocket.onOpen(() => {
+			                console.log('WebSocket连接已打开');
+			            });
+			
+			            this.websocket.onMessage((res) => {
+			                console.log('收到WebSocket消息:', res.data);
+			                const message = JSON.parse(res.data);
+			                
+			                // 根据消息类型处理
+			                switch(message.type) {
+			                    case 'init':
+			                        if (message.status === 'success') {
+			                            this.chatList = message.chatList;
+			                        }
+			                        break;
+			                    case 'chatListUpdate':
+			                        this.chatList = message.data;
+			                        break;
+			                    case 'message':
+			                        // 收到新消息时刷新列表
+			                        this.loadChatList();
+			                        break;
+			                }
+			            });
+			
+			            this.websocket.onError((error) => {
+			                console.error('WebSocket错误：', error);
+			                uni.showToast({
+			                    title: 'WebSocket连接错误',
+			                    icon: 'none'
+			                });
+			            });
+			        },
+
+			closeWebSocket() {
+				if (this.websocket) {
+					this.websocket.close();
+				}
 			},
-			swipeChange(e, index) {
-				console.log('当前状态：' + e + '，下标：' + index)
-			},
+
+			async loadChatList() {
+			            try {
+			                const response = await request.request({
+			                    url: `/chatList/getChatList/${this.userId}`,
+			                    method: 'GET'
+			                });
+			                
+			                console.log('接口返回数据:', response);
+			                
+			                if (response.statusCode === 200 && response.data.code === 200) {
+			                    this.chatList = response.data.data || [];
+			                    console.log('处理后的聊天列表:', this.chatList);
+			                }
+			            } catch (error) {
+			                console.error('加载聊天列表失败：', error);
+			                uni.showToast({
+			                    title: '加载聊天列表失败',
+			                    icon: 'none'
+			                });
+			            }
+			        },
+
 			connect(item) {
 				uni.navigateTo({
-					url: `/pages/chat/message?name=${item.name}&avatar=${item.avatar}`
-				})
+					url: `/pages/chat/message?userId=${item.userId}&userName=${item.userName}&uservatar=${item.uservatar}`
+				});
 			}
 		}
-	}
+	};
 </script>
 
 <style lang="scss" scoped>

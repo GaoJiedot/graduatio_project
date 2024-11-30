@@ -70,7 +70,7 @@
 				<i class="phone"></i>
 				<text>电话</text>
 			</button>
-			<button class="nav-item">
+			<button class="nav-item" @click="toMessage">
 				<i class="message"></i>
 				<text>咨询</text>
 			</button>
@@ -101,7 +101,12 @@
 		methods: {
 			appbtn() {
 				uni.navigateTo({
-					url: `/pages/appointment/appointment?shopId=${this.shop.shopId}&userPhone=${this.userPhone}`
+					url: `/pages/appointment/appointment?counterpartyId=${this.shop.shopId}`
+				})
+			},
+			toMessage(){
+				uni.navigateTo({
+					url: `/pages/chat/message?shopId=${this.shop.shopId}`
 				})
 			},
 			callingPhone() {
