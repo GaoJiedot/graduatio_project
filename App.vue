@@ -1,7 +1,7 @@
 <script>
 	export default {
 	    onShow: function() {
-	        this.checkLoginStatus();
+	        // this.checkLoginStatus();
 	    },
 	    methods: {
 	        checkLoginStatus() {

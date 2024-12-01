@@ -1,37 +1,57 @@
 <template>
-	<view class="page">
-		<scroll-view class="scroll-view" scroll-y scroll-with-animation :scroll-top="top"
-			@scrolltoupper="loadMoreHistory">
-			<view class="message-container">
-				<view class="loading" v-if="isLoading">加载中...</view>
-				<view class="message" :class="[item.userType]" v-for="(item, index) in list" :key="index">
-					<view class="avatar-container" v-if="item.userType === 'friend'">
-						<image :src="item.avatar" class="avatar" mode="aspectFill" />
+	<view class="chat-container">
+		<scroll-view class="message-scroll" scroll-y :scroll-top="scrollTop">
+			<!-- 消息列表 -->
+			<view class="message-list">
+				<view class="message-item" :class="[item.senderId === userId ? 'message-right' : 'message-left']"
+					v-for="(item, index) in messageList" :key="index">
+
+					<!-- 左侧头像 -->
+					<view class="avatar-wrap" v-if="item.senderId !== userId">
+						<image :src="item.senderAvatar || '/static/default-avatar.png'" class="avatar"
+							mode="aspectFill" />
 					</view>
-					<view class="message-content">
-						<view class="content" :class="{'image-content': item.messageType === 'image'}">
-							<image v-if="item.messageType === 'image'" :src="item.content" mode="widthFix"
-								@tap="previewImage(item.content)" />
-							<text v-else>{{ item.content }}</text>
+
+					<!-- 消息内容 -->
+					<view class="message-bubble" :class="{'image-message': item.type === 'image'}">
+						<!-- 发送者名称 -->
+						<view class="sender-name" v-if="item.senderId !== userId">
+							{{item.senderName}}
 						</view>
-						<text class="time">{{ formatTime(item.time) }}</text>
+
+						<!-- 消息内容 -->
+						<view class="message-content">
+							<image v-if="item.type === 'image'" :src="item.content" mode="widthFix"
+								@tap="previewImage(item.content)" class="message-image" />
+							<text v-else class="message-text">{{ item.content }}</text>
+						</view>
+
+						<!-- 消息时间 -->
+						<view class="message-info">
+							<text class="message-time">{{ formatTime(item.sendTime) }}</text>
+						</view>
 					</view>
-					<view class="avatar-container" v-if="item.userType === 'self'">
-						<image :src="item.avatar" class="avatar" mode="aspectFill" />
+
+					<!-- 右侧头像 -->
+					<view class="avatar-wrap" v-if="item.senderId === userId">
+						<image :src="userAvatar|| '/static/default-avatar.png'" class="avatar"
+							mode="aspectFill" />
 					</view>
 				</view>
 			</view>
 		</scroll-view>
 
-		<view class="tool">
-			<view class="tool-inner">
-				<input type="text" v-model="content" class="input" @confirm="send" placeholder="请输入消息..."
-					:disabled="sending" />
-				<view class="action-group">
-					<image src="/static/photo.png" mode="aspectFit" class="action-icon" @tap="chooseImage" />
-					<button class="send-btn" :class="{'disabled': !content.trim()}" @tap="send" :disabled="sending">
-						发送
-					</button>
+		<!-- 输入区域 -->
+		<view class="input-area">
+			<view class="input-container">
+				<input type="text" v-model="content" class="message-input" @confirm="sendMessage"
+					placeholder="请输入消息..." />
+
+				<view class="action-buttons">
+					<view class="image-btn" @tap="chooseImage">
+						<image src="/static/photo.png" mode="aspectFit" class="action-icon" />
+					</view>
+					<button class="send-btn" @tap="sendMessage" :disabled="!content.trim()">发送</button>
 				</view>
 			</view>
 		</view>
@@ -39,424 +59,251 @@
 </template>
 
 <script>
-	import request from '@/utils/request.js';
+	const WS_URL = `ws://localhost:8080/websocket/`;
+	import request from '@/utils/request.js'
 	export default {
 		data() {
 			return {
 				content: '',
-				list: [],
-				top: 0,
-				page: 1,
-				isLoading: false,
-				sending: false,
-				websocket: null,
-				chatInitialized: false,
-				userId: null,
-				userName: '',
-				userAvatar: '',
-				counterpartyId: null,
-				counterpartyName: '',
-				counterpartyAvatar: '',
-				shopId: null
-			}
+				scrollTop: 0,
+				userId:null, 
+				userName:'',
+				userAvatar:'',
+				friendId: '', 
+				friendName:'',
+				friendAvatar:'',
+				shopId:null,
+				messageList:[]
+			};
 		},
 
 		onLoad(options) {
-			uni.setNavigationBarTitle({
-				title: options.userName || this.counterpartyName || '聊天'
-			});
-			if (options.shopId) {
-				this.shopId = options.shopId;
+			this.shopId=options.shopId
+			if(this.shopId){
+				this.getFriendInfo()
 			}
-			uni.getStorage({
-				key: 'userInfo',
-				success: (res) => {
-					this.userName = res.data.userName;
-					this.userId = res.data.userId;
-					this.userAvatar = res.data.userAvatar;
-				}
-			})
-			this.getcounterpartyId();
-			this.checkAndInitializeChat();
-		},
-
-		onUnload() {
-			this.closeWebSocket()
+			this.getUserInfo()
+			this.friendId = options.friendId;
+			this.friendName=options.friendName;
+			this.friendAvatar=options.friendAvatar;
 		},
 
 		methods: {
-			async getcounterpartyId() {
-				const response = await request.request({
-					url: `/user/getcounterpartyId/${this.shopId}`,
-					method: 'GET',
-					success: (res) => {
-						this.counterpartyId = res.data.userId;
-						this.counterpartyName = res.data.userName;
-						this.counterpartyAvatar = res.data.userAvatar;
+			getUserInfo(){
+				uni.getStorage({
+					key:'userInfo',
+					success:res=>{
+						console.log("我",res.data)
+						this.userId=res.data.userId
+						this.userName=res.data.userName
+						this.userAvatar=res.data.userAvatar
 					}
-				});
+				})
 			},
-
-			// 初始化 WebSocket
-			initWebSocket() {
-				const WS_URL = 'ws://localhost:8080/websocket/' + this.userId;
-				this.websocket = uni.connectSocket({
-					url: WS_URL
-				});
-
-				this.websocket.onOpen(() => {
-					console.log('WebSocket已连接');
-				});
-
-				this.websocket.onMessage((res) => {
-					const message = JSON.parse(res.data);
-					this.handleNewMessage(message);
-				});
-
-				this.websocket.onError((error) => {
-					console.error('WebSocket错误：', error);
-				});
-
-				this.websocket.onClose(() => {
-					console.log('WebSocket连接已关闭');
-				});
-			},
-
-			// 关闭 WebSocket
-			closeWebSocket() {
-				if (this.websocket) {
-					this.websocket.close();
-				}
-			},
-
-			async checkAndInitializeChat() {
-				try {
-					const response = await request.request({
-						url: `/chat/check`,
-						method: 'GET',
-						data: {
-							userId: this.userId,
-							friendId: this.counterpartyId
-						}
-					});
-
-					if (response.statusCode === 200) {
-						this.chatInitialized = true;
-						this.initWebSocket();
-						this.loadHistoryMessages();
-					} else {
-						await this.createNewChat();
+			getFriendInfo(){
+				request.request({
+					url:`/user/getFriendId/${this.shopId}`,
+					method:'GET',
+					success:res=>{
+						console.log("对方",res.data.data)
+						
+						this.friendId=res.data.data.userId
+						this.friendName=res.data.data.userName
+						this.friendAvatar=res.data.data.userAvatar
 					}
-				} catch (error) {
-					console.error('检查聊天状态失败：', error);
-					this.handleError('初始化聊天失败');
-				}
+				})
 			},
-
-			// 创建新聊天
-			async createNewChat() {
-				try {
-					const response = await request.request({
-						url: '/chat/create',
-						method: 'POST',
-						data: {
-							userId: this.userId,
-							friendId: this.counterpartyId
-						}
-					});
-
-					if (response.statusCode === 200) {
-						this.chatInitialized = true;
-						this.initWebSocket();
-						this.showWelcomeMessage();
-					} else {
-						throw new Error('创建聊天失败');
-					}
-				} catch (error) {
-					console.error('创建新聊天失败：', error);
-					this.handleError('创建新聊天失败');
-				}
-			},
-
-			showWelcomeMessage() {
-				this.list.push({
-					content: '开始聊天吧！',
-					userType: 'system',
-					time: new Date().getTime(),
-					messageType: 'text'
-				});
-			},
-
-			handleNewMessage(message) {
-				if (message.type === 'message') {
-					this.list.push({
-						content: message.data.content,
-						userType: 'friend',
-						avatar: this.counterpartyAvatar,
-						time: new Date().getTime(),
-						messageType: message.data.type || 'text'
-					});
-
-					this.scrollToBottom();
-				} else if (message.type === 'chatListUpdate') {
-					// 更新聊天列表（此处根据需要进行处理）
-					console.log('更新聊天列表：', message.data);
-				}
-			},
-
-			async loadHistoryMessages() {
-				this.isLoading = true;
-				try {
-					const response = await request.request({
-						url: `/chat/history`,
-						data: {
-							userId: this.userId,
-							page: this.page,
-							size: 20
-						}
-					});
-
-					if (response.statusCode === 200) {
-						const messages = response.data.reverse();
-						this.list.unshift(...messages);
-					}
-				} catch (error) {
-					console.error('加载历史消息失败：', error);
-				} finally {
-					this.isLoading = false;
-				}
-			},
-
 			formatTime(timestamp) {
 				const date = new Date(timestamp);
-				const now = new Date();
-				const diff = now - date;
-
-				if (diff < 24 * 60 * 60 * 1000) {
-					return date.getHours().toString().padStart(2, '0') + ':' +
-						date.getMinutes().toString().padStart(2, '0');
-				} else if (diff < 7 * 24 * 60 * 60 * 1000) {
-					const days = ['日', '一', '二', '三', '四', '五', '六'];
-					return '星期' + days[date.getDay()];
-				} else {
-					return (date.getMonth() + 1) + '月' + date.getDate() + '日';
-				}
-			},
-
-			async send() {
-				if (!this.content.trim() || this.sending) return;
-				if (!this.chatInitialized) {
-					this.handleError('聊天未初始化');
-					return;
-				}
-
-				this.sending = true;
-				const message = {
-					content: this.content,
-					senderId: this.userId,
-					receiverId: this.counterpartyId,
-					type: 'text',
-					time: new Date().getTime()
-				};
-
-				try {
-					this.list.push({
-						content: this.content,
-						userType: 'self',
-						avatar: this.userAvatar,
-						time: message.time,
-						messageType: 'text'
-					});
-
-					await this.sendWebSocketMessage(message);
-					this.content = '';
-					this.scrollToBottom();
-				} catch (error) {
-					console.error('发送消息失败：', error);
-					this.handleError('发送失败');
-					this.list.pop();
-				} finally {
-					this.sending = false;
-				}
-			},
-
-			sendWebSocketMessage(message) {
-				return new Promise((resolve, reject) => {
-					if (!this.websocket || this.websocket.readyState !== 1) {
-						reject(new Error('WebSocket未连接'));
-						return;
-					}
-
-					try {
-						this.websocket.send({
-							data: JSON.stringify(message),
-							success: () => resolve(),
-							fail: (error) => reject(error)
-						});
-					} catch (error) {
-						reject(error);
-					}
-				});
-			},
-
-			chooseImage() {
-				uni.chooseImage({
-					count: 1,
-					sizeType: ['compressed'],
-					success: (res) => {
-						const message = {
-							content: res.tempFilePaths[0],
-							senderId: this.userId,
-							receiverId: this.counterpartyId,
-							type: 'image',
-							time: new Date().getTime(),
-							senderAvatar: this.userAvatar,
-							receiverAvatar: this.counterpartyAvatar
-						};
-
-						this.websocket.send({
-							data: JSON.stringify(message)
-						});
-
-						this.list.push({
-							content: res.tempFilePaths[0],
-							userType: 'self',
-							messageType: 'image',
-							avatar: this.userAvatar,
-							time: message.time
-						});
-
-						this.scrollToBottom();
-					},
-					fail: () => {
-						uni.showToast({
-							title: '选择图片失败',
-							icon: 'none'
-						});
-					}
-				});
-			},
-
-			handleError(message) {
-				uni.showToast({
-					title: message,
-					icon: 'none'
-				});
+				return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
 			},
 
 			scrollToBottom() {
-				this.top = this.list.length * 100; // 滚动到底部
-			},
-
-			loadMoreHistory() {
-				if (this.isLoading) return;
-				this.page++;
-				this.loadHistoryMessages();
-			},
-
-			previewImage(content) {
-				uni.previewImage({
-					urls: [content],
+				this.$nextTick(() => {
+					this.scrollTop = 999999;
 				});
+			},
+
+			previewImage(url) {
+				uni.previewImage({
+					urls: [url]
+				});
+			},
+
+			sendMessage() {
+				if (this.content.trim()) {
+					const newMessage = {
+						senderId: this.userId,
+						receiverId: this.friendId,
+						sendAvatar:this.userAvatar,
+						receiverIAvatar:this.friendAvatar,
+						content: this.content.trim(),
+						sendTime: Date.now(),
+					};
+					this.messageList.push(newMessage);
+					this.content = '';
+					this.scrollToBottom();
+				}
+			},
+			receiveMessage(message) {
+				if(this.content.trim()){
+					const newMessage = {
+						senderId: this.friendId,
+						receiverId:this.userId,
+						sendAvatar:this.friendAvatar,
+						receiverIAvatar:this.userAvatar,
+						content: this.content.trim(),
+						sendTime: Date.now(),
+					};
+				}
+				this.messageList.push(message);
+				this.scrollToBottom();
+			},
+			getMessageList() {
+				// 获取历史消息
+			},
+
+			chooseImage() {
+				// 选择图片功能
+			}
+		}
+	};
+</script>
+
+<style lang="scss" scoped>
+	.chat-container {
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
+		background-color: #f5f5f5;
+	}
+
+	.message-scroll {
+		flex: 1;
+		padding: 10px 15px;
+	}
+
+	.message-list {
+		.message-item {
+			display: flex;
+			margin-bottom: 15px;
+
+			&.message-right {
+				flex-direction: row-reverse;
+
+				.message-bubble {
+					margin-left: 0;
+					margin-right: 10px;
+					background-color: #007AFF;
+					color: #fff;
+				}
 			}
 		}
 	}
-</script>
 
-<style scoped>
-	.page {
-		display: flex;
-		flex-direction: column;
-		height: 100%;
-	}
-
-	.scroll-view {
-		flex: 1;
-		padding: 10px;
-	}
-
-	.message-container {
-		display: flex;
-		flex-direction: column;
-	}
-
-	.message {
-		display: flex;
-		flex-direction: row;
-		margin-bottom: 10px;
-	}
-
-	.avatar-container {
+	.avatar-wrap {
 		width: 40px;
 		height: 40px;
-		margin-right: 10px;
+		flex-shrink: 0;
+
+		.avatar {
+			width: 100%;
+			height: 100%;
+			border-radius: 50%;
+		}
 	}
 
-	.avatar {
-		width: 100%;
-		height: 100%;
-		border-radius: 50%;
+	.message-bubble {
+		max-width: 70%;
+		margin-left: 10px;
+		background-color: #fff;
+		border-radius: 12px;
+		padding: 8px 12px;
+		position: relative;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+
+		&.image-message {
+			background-color: transparent;
+			padding: 0;
+			box-shadow: none;
+
+			.message-image {
+				max-width: 200px;
+				border-radius: 8px;
+			}
+		}
+	}
+
+	.sender-name {
+		font-size: 12px;
+		color: #999;
+		margin-bottom: 4px;
 	}
 
 	.message-content {
-		max-width: 80%;
-		padding: 5px 10px;
-		border-radius: 10px;
+		font-size: 15px;
+		line-height: 1.4;
 	}
 
-	.content {
-		word-wrap: break-word;
+	.message-info {
+		display: flex;
+		justify-content: flex-end;
+		align-items: center;
+		margin-top: 4px;
+
+		.message-time {
+			font-size: 11px;
+			color: #999;
+		}
 	}
 
-	.image-content {
-		max-width: 200px;
+	.input-area {
+		padding: 10px 15px;
+		background-color: #fff;
+		border-top: 1px solid #eee;
 	}
 
-	.time {
-		font-size: 12px;
-		color: #888;
-		margin-top: 5px;
-		text-align: right;
-	}
-
-	.tool {
-		padding: 10px;
-		border-top: 1px solid #ddd;
-	}
-
-	.tool-inner {
+	.input-container {
 		display: flex;
 		align-items: center;
 	}
 
-	.input {
+	.message-input {
 		flex: 1;
-		padding: 8px;
-		border-radius: 20px;
-		border: 1px solid #ddd;
+		height: 36px;
+		background-color: #f5f5f5;
+		border-radius: 18px;
+		padding: 0 15px;
+		font-size: 15px;
 	}
 
-	.action-group {
+	.action-buttons {
 		display: flex;
 		align-items: center;
 		margin-left: 10px;
 	}
 
-	.action-icon {
-		width: 24px;
-		height: 24px;
-		margin-right: 10px;
+	.image-btn {
+		width: 36px;
+		height: 36px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-right: 8px;
+
+		.action-icon {
+			width: 24px;
+			height: 24px;
+		}
 	}
 
 	.send-btn {
-		background-color: #007aff;
-		color: white;
-		padding: 8px 15px;
-		border-radius: 20px;
-		cursor: pointer;
-	}
-
-	.send-btn.disabled {
-		background-color: #ccc;
+		height: 36px;
+		line-height: 36px;
+		padding: 0 15px;
+		background-color: #007AFF;
+		color: #fff;
+		border-radius: 18px;
+		font-size: 15px;
 	}
 </style>

@@ -1,46 +1,79 @@
 <template>
-	<view class="page">
-		<view class="list-item" v-for="(item, index) in chatList" :key="index" @click="connect(item)">
-			<view class="avatar">
-				<text class="round" v-if="item.unreadStatus === 0"></text>
-				<image :src="item.friendAvatar" mode="widthFix"></image>
-			</view>
-			<view class="content">
-				<view class="title">
-					<text class="name">{{ item.friendName }}</text>
-					<text class="time">{{ item.sendTime }}</text>
+	<view class="chat-page">
+		<!-- Connection status -->
+		<view v-if="connectionStatus !== 'connected'" class="status-bar" :class="connectionStatus">
+			{{ getStatusMessage }}
+		</view>
+
+		<!-- Chat list -->
+		<view class="chat-list">
+			<view class="chat-item" v-for="(chat, index) in chatList" :key="index" @tap="navigateToChat(chat)">
+				<view class="avatar-container">
+					<image class="avatar" :src="chat.friendAvatar" mode="aspectFill"></image>
+					<view v-if="chat.unreadCount > 0" class="unread-badge">{{ chat.unreadCount }}</view>
 				</view>
-				<view class="txt">{{ item.content }}</view>
+
+				<view class="chat-info">
+					<view class="chat-header">
+						<text class="name">{{ chat.friendName }}</text>
+						<text class="time">{{ formatTime(chat.sendTime) }}</text>
+					</view>
+					<text class="last-message">{{ chat.content || '' }}</text>
+				</view>
 			</view>
+		</view>
+
+		<!-- Empty state -->
+		<view v-if="chatList.length === 0" class="empty-state">
+			<text>暂无聊天记录</text>
 		</view>
 	</view>
 </template>
 
 <script>
-	import request from '@/utils/request.js';
-
-	const WS_URL = 'ws://localhost:8080';
-
+	const RECONNECT_TIMEOUT = 3000;
+	const WS_URL = `ws://localhost:8080/websocket/`;
+	import request from '@/utils/request.js'
 	export default {
 		data() {
 			return {
-				userId: '',
-				websocket: null,
 				chatList: [],
+				websocket: null,
+				connectionStatus: 'disconnected',
+				userId: '',
+				reconnectAttempts: 0,
+				maxReconnectAttempts: 5
 			};
 		},
 
-		onLoad() {
-			// Load user info from storage
-			uni.getStorage({
-				key: 'userInfo',
-				success: (res) => {
-					this.userId = res.data.userId;
-				}
-			});
+		computed: {
+			getStatusMessage() {
+				const messages = {
+					connecting: '正在连接...',
+					disconnected: '连接已断开，正在重新连接...',
+					error: '连接错误，请检查网络'
+				};
+				return messages[this.connectionStatus] || '';
+			}
+		},
 
-			this.initWebSocket();
-			this.loadChatList();
+		onLoad() {
+			try {
+				const userInfo = uni.getStorageSync('userInfo');
+				if (userInfo) {
+					console.log('用户信息:', userInfo);
+					this.userId = userInfo.userId;
+					this.initWebSocket();
+				} else {
+					uni.showToast({
+						title: '请先登录',
+						icon: 'none'
+					});
+				}
+			} catch (e) {
+				console.error('获取用户信息失败:', e);
+			}
+			
 		},
 
 		onUnload() {
@@ -49,146 +82,288 @@
 
 		methods: {
 			initWebSocket() {
-			            this.websocket = uni.connectSocket({
-			                url: `${WS_URL}/websocket/${this.userId}`,
-			                complete: () => {}
-			            });
-			
-			            this.websocket.onOpen(() => {
-			                console.log('WebSocket连接已打开');
-			            });
-			
-			            this.websocket.onMessage((res) => {
-			                console.log('收到WebSocket消息:', res.data);
-			                const message = JSON.parse(res.data);
-			                
-			                // 根据消息类型处理
-			                switch(message.type) {
-			                    case 'init':
-			                        if (message.status === 'success') {
-			                            this.chatList = message.chatList;
-			                        }
-			                        break;
-			                    case 'chatListUpdate':
-			                        this.chatList = message.data;
-			                        break;
-			                    case 'message':
-			                        // 收到新消息时刷新列表
-			                        this.loadChatList();
-			                        break;
-			                }
-			            });
-			
-			            this.websocket.onError((error) => {
-			                console.error('WebSocket错误：', error);
-			                uni.showToast({
-			                    title: 'WebSocket连接错误',
-			                    icon: 'none'
-			                });
-			            });
-			        },
-
-			closeWebSocket() {
 				if (this.websocket) {
-					this.websocket.close();
+					this.closeWebSocket();
+				}
+
+				this.connectionStatus = 'connecting';
+
+				try {
+					this.websocket = uni.connectSocket({
+						url: `${WS_URL}${this.userId}`,
+						success: () => {
+							console.log('WebSocket连接创建成功');
+						}
+					});
+
+					this.websocket.onOpen(() => {
+						console.log('WebSocket连接已打开');
+						this.connectionStatus = 'connected';
+						this.reconnectAttempts = 0;
+						
+					});
+
+					this.websocket.onMessage((res) => {
+						try {
+							const message = JSON.parse(res.data);
+							console.log('收到消息:', message);
+
+							this.handleWebSocketMessage(message);
+						} catch (e) {
+							console.error('解析消息失败:', e);
+						}
+					});
+
+					this.websocket.onError((error) => {
+						console.error('WebSocket错误:', error);
+						this.connectionStatus = 'error';
+						this.handleReconnect();
+					});
+
+					this.websocket.onClose(() => {
+						console.log('WebSocket连接已关闭');
+						this.connectionStatus = 'disconnected';
+						this.handleReconnect();
+					});
+
+				} catch (e) {
+					console.error('创建WebSocket连接失败:', e);
+					this.connectionStatus = 'error';
 				}
 			},
 
-			async loadChatList() {
-			            try {
-			                const response = await request.request({
-			                    url: `/chatList/getChatList/${this.userId}`,
-			                    method: 'GET'
-			                });
-			                
-			                console.log('接口返回数据:', response);
-			                
-			                if (response.statusCode === 200 && response.data.code === 200) {
-			                    this.chatList = response.data.data || [];
-			                    console.log('处理后的聊天列表:', this.chatList);
-			                }
-			            } catch (error) {
-			                console.error('加载聊天列表失败：', error);
+			handleWebSocketMessage(message) {
+				switch (message.type) {
+					case 'init':
+						if (message.chatList) {
+							this.chatList = this.formatChatList(message.chatList);
+						}
+						break;
+
+					case 'chatListUpdate':
+						if (message.data) {
+							this.chatList = this.formatChatList(message.data);
+						}
+						break;
+
+					case 'status':
+						this.updateUserStatus(message);
+						break;
+
+					default:
+						console.log('未知消息类型:', message.type);
+				}
+			},
+			
+			closeWebSocket() {
+				if (this.websocket) {
+					this.websocket.close();
+					this.websocket = null;
+				}
+			},
+
+			formatChatList(list) {
+				console.log('格式化前的聊天列表:', list);
+				return list.map(item => ({
+					...item,
+					friendAvatar: item.friendAvatar || '/static/default-avatar.png',
+					friendName: item.friendName || item.friendname || '未知用户',
+					content: item.content || '',
+					sendTime: item.sendTime || new Date().toISOString(),
+					unreadCount: item.unreadStatus === 0 ? 1 : 0
+				}));
+			},
+
+			updateUserStatus(statusMessage) {
+				const chatIndex = this.chatList.findIndex(
+					chat => chat.friendId === statusMessage.userId
+				);
+
+				if (chatIndex !== -1) {
+					this.chatList[chatIndex].online = statusMessage.status === 'online';
+					// 强制更新视图
+					this.chatList = [...this.chatList];
+				}
+			},
+
+			handleReconnect() {
+				if (this.reconnectAttempts < this.maxReconnectAttempts) {
+					setTimeout(() => {
+						console.log('尝试重新连接...');
+						this.reconnectAttempts++;
+						this.initWebSocket();
+					}, RECONNECT_TIMEOUT);
+				} else {
+					uni.showToast({
+						title: '连接失败，请检查网络后重试',
+						icon: 'none'
+					});
+				}
+			},
+
+			formatTime(timestamp) {
+				if (!timestamp) return '';
+
+				const date = new Date(timestamp);
+				const now = new Date();
+				const diff = now - date;
+
+				// 今天的消息显示时间
+				if (diff < 24 * 60 * 60 * 1000) {
+					return date.toTimeString().slice(0, 5);
+				}
+
+				// 一周内的消息显示星期
+				if (diff < 7 * 24 * 60 * 60 * 1000) {
+					const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+					return days[date.getDay()];
+				}
+
+				// 更早的消息显示完整日期
+				return `${date.getMonth() + 1}-${date.getDate()}`;
+			},
+
+			// In chat.vue, update navigateToChat function
+			navigateToChat(chat) {
+			    try {
+			        const url = `/pages/chat/message?friendId=${encodeURIComponent(chat.friendId)}&friendName=${encodeURIComponent(chat.friendName)}&friendAvatar=${encodeURIComponent(chat.friendAvatar)}`;
+			        uni.navigateTo({
+			            url,
+			            fail: (error) => {
+			                console.error('导航失败:', error);
 			                uni.showToast({
-			                    title: '加载聊天列表失败',
+			                    title: '页面跳转失败',
 			                    icon: 'none'
 			                });
 			            }
-			        },
+			        });
+			    } catch (error) {
+			        console.error('导航错误:', error);
+			        uni.showToast({
+			            title: '页面跳转出错',
+			            icon: 'none'
+			        });
+			    }
+			},
 
-			connect(item) {
-				uni.navigateTo({
-					url: `/pages/chat/message?userId=${item.userId}&userName=${item.userName}&uservatar=${item.uservatar}`
-				});
+			closeWebSocket() {
+				if (this.websocket) {
+					try {
+						this.websocket.close();
+					} catch (e) {
+						console.error('关闭WebSocket连接失败:', e);
+					}
+				}
 			}
 		}
 	};
 </script>
 
-<style lang="scss" scoped>
-	.page {
-		padding: 0 32rpx;
+<style lang="scss">
+	.chat-page {
+		min-height: 100vh;
+		background-color: #f5f5f5;
+	}
+
+	.status-bar {
+		padding: 10rpx 20rpx;
+		text-align: center;
+		font-size: 24rpx;
+
+		&.connecting {
+			background-color: #e6f7ff;
+			color: #1890ff;
+		}
+
+		&.disconnected {
+			background-color: #fff1f0;
+			color: #f5222d;
+		}
+
+		&.error {
+			background-color: #fff2e8;
+			color: #fa541c;
+		}
+	}
+
+	.chat-list {
+		padding: 0 20rpx;
+	}
+
+	.chat-item {
+		display: flex;
+		align-items: center;
+		padding: 20rpx 0;
+		background-color: #fff;
+		border-bottom: 1rpx solid #eee;
+
+		&:active {
+			background-color: #f0f0f0;
+		}
+	}
+
+	.avatar-container {
+		position: relative;
+		margin-right: 20rpx;
+	}
+
+	.avatar {
+		width: 88rpx;
+		height: 88rpx;
+		border-radius: 10rpx;
+	}
+
+	.unread-badge {
+		position: absolute;
+		top: -8rpx;
+		right: -8rpx;
+		min-width: 32rpx;
+		height: 32rpx;
+		padding: 0 6rpx;
+		border-radius: 16rpx;
+		background-color: #ff4d4f;
+		color: #fff;
+		font-size: 20rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.chat-info {
+		flex: 1;
+		overflow: hidden;
+	}
+
+	.chat-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 8rpx;
+	}
+
+	.name {
+		font-size: 32rpx;
+		font-weight: 500;
 		color: #333;
 	}
 
-	.list-item {
-		display: flex;
-		padding: 30rpx 0;
-		border-bottom: 0.3px solid #ccced3;
+	.time {
+		font-size: 24rpx;
+		color: #999;
+	}
 
-		.avatar {
-			width: 90rpx;
-			height: 90rpx;
-			border-radius: 10rpx;
-			margin-right: 20rpx;
-			position: relative;
+	.last-message {
+		font-size: 28rpx;
+		color: #666;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
 
-			.round {
-				position: absolute;
-				width: 14rpx;
-				height: 14rpx;
-				border-radius: 50%;
-				background: #ef5656;
-				top: -4rpx;
-				right: -4rpx;
-				z-index: 1;
-			}
-
-			image {
-				width: 100%;
-				height: 100%;
-				border-radius: 10rpx;
-			}
-		}
-
-		.content {
-			flex: 1;
-
-			.title {
-				display: flex;
-				justify-content: space-between;
-
-				.name {
-					font-weight: bold;
-				}
-
-				.time {
-					color: #999;
-					font-size: 24rpx;
-				}
-			}
-
-			.txt {
-				margin-top: 10rpx;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				display: -webkit-box;
-				-webkit-line-clamp: 1;
-				-webkit-box-orient: vertical;
-				text-align: left;
-				color: #999;
-				font-size: 26rpx;
-			}
-		}
+	.empty-state {
+		padding: 60rpx 0;
+		text-align: center;
+		color: #999;
+		font-size: 28rpx;
 	}
 </style>
