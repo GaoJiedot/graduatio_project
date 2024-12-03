@@ -14,7 +14,10 @@
 		<view v-for="(item, index) in data" :key="index" class="list-item" @click="toDeatils(item)">
 			<listVue :tabulatedata="item" :shopId="item.shopId"></listVue>
 		</view>
+		<uni-load-more color="#007AFF" :status="status" />
+
 	</view>
+
 </template>
 
 <script>
@@ -22,15 +25,32 @@
 	import menuVue from '../../component/menu/menu.vue';
 	import marginSwiperVue from 'component/margin-swiper/margin-swiper.vue';
 	import request from '@/utils/request.js'
+	import uniLoadMore from '@/uni_modules/uni-load-more/components/uni-load-more/uni-load-more.vue'
+
 	export default {
 
 		components: {
 			marginSwiperVue,
 			menuVue,
-			listVue
+			listVue,
+			uniLoadMore
 		},
 		data() {
 			return {
+				status: 'more',
+				statusTypes: [{
+					value: 'more',
+					text: '加载前',
+					checked: true
+				}, {
+					value: 'loading',
+					text: '加载中',
+					checked: false
+				}, {
+					value: 'noMore',
+					text: '没有更多',
+					checked: false
+				}],
 				userInfo: {
 					userType: null,
 					shopId: null
@@ -86,6 +106,15 @@
 						console.error('获取列表数据失败:', err);
 					}
 				});
+			},
+			onChange(e) {
+				this.status = e.detail.value
+			},
+			clickLoadMore(e) {
+				uni.showToast({
+					icon: 'none',
+					title: "当前状态：" + e.detail.status
+				})
 			}
 		},
 		async onLoad() {
@@ -104,6 +133,32 @@
 
 <style lang="scss" scoped>
 	.container {
+		.uni-list-item {
+			border-bottom-style: solid;
+			border-bottom-width: 1px;
+			border-bottom-color: #eee;
+			font-size: 14px;
+		}
+
+		.uni-list-item__container {
+			/* #ifndef APP-NVUE */
+			display: flex;
+			width: 100%;
+			box-sizing: border-box;
+			/* #endif */
+			padding: 12px 15px;
+			flex: 1;
+			position: relative;
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+		.uni-list-item__content-title {
+			font-size: 14px;
+			color: #666;
+		}
+
 		.box {
 			display: flex;
 			justify-content: center;

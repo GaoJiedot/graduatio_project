@@ -27,229 +27,195 @@
 </template>
 
 <script>
-	const RECONNECT_TIMEOUT = 3000;
-	const WS_URL = `ws://localhost:8080/websocket/`;
-	import request from '@/utils/request.js'
-	export default {
-		data() {
-			return {
-				chatList: [],
-				websocket: null,
-				connectionStatus: 'disconnected',
-				userId: '',
-				reconnectAttempts: 0,
-				maxReconnectAttempts: 5
+import WebSocketService from '@/utils/websocket.js'
+import request from '@/utils/request.js'
+
+export default {
+	data() {
+		return {
+			chatList: [],
+			wsService: null,
+			connectionStatus: 'disconnected',
+			userId: ''
+		};
+	},
+
+	computed: {
+		getStatusMessage() {
+			const messages = {
+				connecting: '正在连接...',
+				disconnected: '连接已断开，正在重新连接...',
+				error: '连接错误，请检查网络'
 			};
+			return messages[this.connectionStatus] || '';
+		}
+	},
+
+	onLoad() {
+		try {
+			const userInfo = uni.getStorageSync('userInfo');
+			if (userInfo) {
+				console.log('用户信息:', userInfo);
+				this.userId = userInfo.userId;
+				this.initWebSocket();
+			} else {
+				uni.showToast({
+					title: '请先登录',
+					icon: 'none'
+				});
+			}
+		} catch (e) {
+			console.error('获取用户信息失败:', e);
+		}
+	},
+
+	onPullDownRefresh() {
+		console.log('refresh');
+		this.getChatList();
+
+		setTimeout(function() {
+			uni.stopPullDownRefresh();
+		}, 1000);
+	},
+
+	onUnload() {
+		if (this.wsService) {
+			this.wsService.close();
+		}
+	},
+
+	methods: {
+		initWebSocket() {
+			// 创建WebSocket服务实例
+			this.wsService = new WebSocketService({
+				userId: this.userId,
+				url: 'ws://localhost:8080/websocket/'
+			});
+
+			// 注册事件处理器
+			this.wsService.on('connected', () => {
+				this.connectionStatus = 'connected';
+			});
+
+			this.wsService.on('init', (message) => {
+				if (message.chatList) {
+					this.chatList = this.formatChatList(message.chatList);
+				}
+			});
+
+			this.wsService.on('chatListUpdate', (message) => {
+				if (message.data) {
+					this.chatList = this.formatChatList(message.data);
+				}
+			});
+
+			this.wsService.on('status', (message) => {
+				this.updateUserStatus(message);
+			});
+
+			this.wsService.on('error', () => {
+				this.connectionStatus = 'error';
+			});
+
+			this.wsService.on('close', () => {
+				this.connectionStatus = 'disconnected';
+			});
+
+			this.wsService.on('reconnectFailed', () => {
+				uni.showToast({
+					title: '连接失败，请检查网络后重试',
+					icon: 'none'
+				});
+			});
+
+			// 建立连接
+			this.wsService.connect();
 		},
 
-		computed: {
-			getStatusMessage() {
-				const messages = {
-					connecting: '正在连接...',
-					disconnected: '连接已断开，正在重新连接...',
-					error: '连接错误，请检查网络'
-				};
-				return messages[this.connectionStatus] || '';
+		formatChatList(list) {
+			console.log('格式化前的聊天列表:', list);
+			return list.map(item => ({
+				...item,
+				friendAvatar: item.friendAvatar ||
+					'http://localhost:8080/avatar/1_edaf677a-d5bc-4be1-a3d3-79c2c5ea6963_avatars-23.png',
+				friendName: item.friendName || item.friendname || '未知用户',
+				content: item.content || '',
+				sendTime: item.sendTime || new Date().toISOString(),
+				unreadCount: item.unreadStatus === 0 ? 1 : 0
+			}));
+		},
+
+		updateUserStatus(statusMessage) {
+			const chatIndex = this.chatList.findIndex(
+				chat => chat.friendId === statusMessage.userId
+			);
+
+			if (chatIndex !== -1) {
+				this.chatList[chatIndex].online = statusMessage.status === 'online';
+				this.chatList = [...this.chatList];
 			}
 		},
 
-		onLoad() {
-			try {
-				const userInfo = uni.getStorageSync('userInfo');
-				if (userInfo) {
-					console.log('用户信息:', userInfo);
-					this.userId = userInfo.userId;
-					this.initWebSocket();
-				} else {
-					uni.showToast({
-						title: '请先登录',
-						icon: 'none'
-					});
-				}
-			} catch (e) {
-				console.error('获取用户信息失败:', e);
-			}
-			
-		},
-
-		onUnload() {
-			this.closeWebSocket();
-		},
-
-		methods: {
-			initWebSocket() {
-				if (this.websocket) {
-					this.closeWebSocket();
-				}
-
-				this.connectionStatus = 'connecting';
-
-				try {
-					this.websocket = uni.connectSocket({
-						url: `${WS_URL}${this.userId}`,
-						success: () => {
-							console.log('WebSocket连接创建成功');
-						}
-					});
-
-					this.websocket.onOpen(() => {
-						console.log('WebSocket连接已打开');
-						this.connectionStatus = 'connected';
-						this.reconnectAttempts = 0;
-						
-					});
-
-					this.websocket.onMessage((res) => {
-						try {
-							const message = JSON.parse(res.data);
-							console.log('收到消息:', message);
-
-							this.handleWebSocketMessage(message);
-						} catch (e) {
-							console.error('解析消息失败:', e);
-						}
-					});
-
-					this.websocket.onError((error) => {
-						console.error('WebSocket错误:', error);
-						this.connectionStatus = 'error';
-						this.handleReconnect();
-					});
-
-					this.websocket.onClose(() => {
-						console.log('WebSocket连接已关闭');
-						this.connectionStatus = 'disconnected';
-						this.handleReconnect();
-					});
-
-				} catch (e) {
-					console.error('创建WebSocket连接失败:', e);
-					this.connectionStatus = 'error';
-				}
-			},
-
-			handleWebSocketMessage(message) {
-				switch (message.type) {
-					case 'init':
-						if (message.chatList) {
-							this.chatList = this.formatChatList(message.chatList);
-						}
-						break;
-
-					case 'chatListUpdate':
-						if (message.data) {
-							this.chatList = this.formatChatList(message.data);
-						}
-						break;
-
-					case 'status':
-						this.updateUserStatus(message);
-						break;
-
-					default:
-						console.log('未知消息类型:', message.type);
-				}
-			},
-			
-			closeWebSocket() {
-				if (this.websocket) {
-					this.websocket.close();
-					this.websocket = null;
-				}
-			},
-
-			formatChatList(list) {
-				console.log('格式化前的聊天列表:', list);
-				return list.map(item => ({
-					...item,
-					friendAvatar: item.friendAvatar || 'http://localhost:8080/avatar/1_edaf677a-d5bc-4be1-a3d3-79c2c5ea6963_avatars-23.png',
-					friendName: item.friendName || item.friendname || '未知用户',
-					content: item.content || '',
-					sendTime: item.sendTime || new Date().toISOString(),
-					unreadCount: item.unreadStatus === 0 ? 1 : 0
-				}));
-			},
-
-			updateUserStatus(statusMessage) {
-				const chatIndex = this.chatList.findIndex(
-					chat => chat.friendId === statusMessage.userId
-				);
-
-				if (chatIndex !== -1) {
-					this.chatList[chatIndex].online = statusMessage.status === 'online';
-					this.chatList = [...this.chatList];
-				}
-			},
-
-			handleReconnect() {
-				if (this.reconnectAttempts < this.maxReconnectAttempts) {
-					setTimeout(() => {
-						console.log('尝试重新连接...');
-						this.reconnectAttempts++;
-						this.initWebSocket();
-					}, RECONNECT_TIMEOUT);
-				} else {
-					uni.showToast({
-						title: '连接失败，请检查网络后重试',
-						icon: 'none'
-					});
-				}
-			},
-
-			formatTime(timestamp) {
-				if (!timestamp) return '';
-
-				const date = new Date(timestamp);
-				const now = new Date();
-				const diff = now - date;
-
-				if (diff < 24 * 60 * 60 * 1000) {
-					return date.toTimeString().slice(0, 5);
-				}
-
-				if (diff < 7 * 24 * 60 * 60 * 1000) {
-					const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-					return days[date.getDay()];
-				}
-
-
-				return `${date.getMonth() + 1}-${date.getDate()}`;
-			},
-			navigateToChat(chat) {
-			    try {
-			        const url = `/pages/chat/message?friendId=${encodeURIComponent(chat.friendId)}&friendName=${encodeURIComponent(chat.friendName)}&friendAvatar=${encodeURIComponent(chat.friendAvatar)}`;
-			        uni.navigateTo({
-			            url,
-			            fail: (error) => {
-			                console.error('导航失败:', error);
-			                uni.showToast({
-			                    title: '页面跳转失败',
-			                    icon: 'none'
-			                });
-			            }
-			        });
-			    } catch (error) {
-			        console.error('导航错误:', error);
-			        uni.showToast({
-			            title: '页面跳转出错',
-			            icon: 'none'
-			        });
-			    }
-			},
-
-			closeWebSocket() {
-				if (this.websocket) {
-					try {
-						this.websocket.close();
-					} catch (e) {
-						console.error('关闭WebSocket连接失败:', e);
+		getChatList() {
+			request.request({
+				url: `/chatList/getChatList/${this.userId}`,
+				method: 'GET',
+				success: (res) => {
+					if (res.data.code === 200) {
+						this.chatList = this.formatChatList(res.data.data);
+					} else {
+						uni.showToast({
+							title: '获取聊天列表失败',
+							icon: 'none'
+						});
 					}
 				}
+			});
+		},
+
+		formatTime(timestamp) {
+			if (!timestamp) return '';
+
+			const date = new Date(timestamp);
+			const now = new Date();
+			const diff = now - date;
+
+			if (diff < 24 * 60 * 60 * 1000) {
+				return date.toTimeString().slice(0, 5);
+			}
+
+			if (diff < 7 * 24 * 60 * 60 * 1000) {
+				const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+				return days[date.getDay()];
+			}
+
+			return `${date.getMonth() + 1}-${date.getDate()}`;
+		},
+
+		navigateToChat(chat) {
+			try {
+				const url = `/pages/chat/message?friendId=${encodeURIComponent(chat.friendId)}&friendName=${encodeURIComponent(chat.friendName)}&friendAvatar=${encodeURIComponent(chat.friendAvatar)}`;
+				uni.navigateTo({
+					url,
+					fail: (error) => {
+						console.error('导航失败:', error);
+						uni.showToast({
+							title: '页面跳转失败',
+							icon: 'none'
+						});
+					}
+				});
+			} catch (error) {
+				console.error('导航错误:', error);
+				uni.showToast({
+					title: '页面跳转出错',
+					icon: 'none'
+				});
 			}
 		}
-	};
+	}
+};
 </script>
-
 <style lang="scss">
 	.chat-page {
 		min-height: 100vh;

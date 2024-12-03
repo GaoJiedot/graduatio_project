@@ -5,48 +5,47 @@
 			<view class="message-list">
 				<view class="message-item" :class="[item.senderId === userId ? 'message-right' : 'message-left']"
 					v-for="(item, index) in messageList" :key="index">
-					<!-- 左侧头像 -->
-					<view class="avatar-wrap" v-if="item.senderId !== userId">
-						<image :src="item.friendAvatar || '/static/default-avatar.png'" class="avatar"
-							mode="aspectFill" />
-					</view>
-
-					<!-- 消息内容 -->
-					<view class="message-bubble" :class="{'image-message': item.type === 'image'}">
-						<view class="sender-name" v-if="item.senderId !== userId">
-							{{item.friendName}}
+					<!-- 左侧消息 -->
+					<template v-if="item.senderId !== userId">
+						<view class="avatar-wrap">
+							<image :src="item.userAvatar" class="avatar" mode="aspectFill" />
 						</view>
-
-						<view class="message-content">
-							<image v-if="item.type === 'image'" :src="item.content" mode="widthFix"
-								@tap="previewImage(item.content)" class="message-image" />
-							<text v-else class="message-text">{{ item.content }}</text>
-						</view>
-
-						<view class="message-info">
+						<view class="message-content-wrap">
+							<view class="sender-name">{{item.userName}}</view>
+							<view class="message-bubble" :class="{'image-message': item.type === 'image'}">
+								<image v-if="item.type === 'image'" :src="item.content" mode="widthFix"
+									@tap="previewImage(item.content)" class="message-image" />
+								<text v-else class="message-text">{{ item.content }}</text>
+							</view>
 							<text class="message-time">{{ formatTime(item.sendTime) }}</text>
 						</view>
-					</view>
+					</template>
 
-					<!-- 右侧头像 -->
-					<view class="avatar-wrap " v-if="item.senderId === userId">
-						<image
-							:src="userAvatar || 'http://localhost:8080/avatar/1_edaf677a-d5bc-4be1-a3d3-79c2c5ea6963_avatars-23.png'"
-							class="avatar" mode="aspectFill" />
-					</view>
+					<!-- 右侧消息 -->
+					<template v-else>
+						<view class="message-content-wrap right">
+							<view class="sender-name">{{item.userName}}</view>
+							<view class="message-bubble" :class="{'image-message': item.type === 'image'}">
+								<image v-if="item.type === 'image'" :src="item.content" mode="widthFix"
+									@tap="previewImage(item.content)" class="message-image" />
+								<text v-else class="message-text">{{ item.content }}</text>
+							</view>
+							<text class="message-time">{{ formatTime(item.sendTime) }}</text>
+						</view>
+						<view class="avatar-wrap right">
+							<image :src="item.userAvatar" class="avatar" mode="aspectFill" />
+						</view>
+					</template>
 				</view>
 			</view>
 		</scroll-view>
-
-		<!-- 输入区域 -->
 		<view class="input-area">
 			<view class="input-container">
 				<input type="text" v-model="content" class="message-input" @confirm="sendMessage"
 					placeholder="请输入消息..." />
-
 				<view class="action-buttons">
 					<view class="image-btn" @tap="chooseImage">
-						<image src="/static/photo.png" mode="aspectFit" class="action-icon" />
+						<image src="/static/icon/添加.png" mode="aspectFit" class="action-icon" />
 					</view>
 					<button class="send-btn" :class="{'send-btn-active': content.trim()}" @tap="sendMessage"
 						:disabled="!content.trim()">
@@ -57,7 +56,6 @@
 		</view>
 	</view>
 </template>
-
 <script>
 	const WS_URL = `ws://localhost:8080/websocket/`;
 	import request from '@/utils/request.js'
@@ -97,7 +95,6 @@
 		async onLoad(options) {
 			console.log('Loaded with options:', options);
 
-			// First get user info
 			await this.getUserInfo();
 
 			// Then handle shop or direct friend connection
@@ -110,7 +107,6 @@
 				this.friendAvatar = options.friendAvatar;
 			}
 
-			// Only call selectChat after we have friendId
 			if (this.friendId) {
 				this.selectChat();
 			} else {
@@ -172,6 +168,7 @@
 								this.friendId = res.data.data.userId;
 								this.friendName = res.data.data.userName;
 								this.friendAvatar = res.data.data.userAvatar;
+
 							}
 							resolve();
 						},
@@ -182,6 +179,7 @@
 								icon: 'none'
 							});
 							resolve();
+
 						}
 					});
 				});
@@ -253,6 +251,9 @@
 								}
 								break;
 						}
+						uni.setNavigationBarTitle({
+							title: `正在和${this.friendName}聊天`
+						});
 						this.scrollToBottom()
 					})
 					this.websocket.onClose(() => {
@@ -276,12 +277,12 @@
 			},
 			createChat() {
 				const initialMessage = {
-					userId: this.userId,
-					userName: this.userName,
-					friendId: this.friendId,
-					friendName: this.friendName,
-					userAvatar: this.userAvatar,
-					friendAvatar: this.friendAvatar,
+					userId: this.friendId,
+					userName: this.friendName,
+					userAvatar: this.friendAvatar,
+					friendId: this.userId,
+					friendName: this.userName,
+					friendAvatar: this.userAvatar,
 					senderId: this.friendId,
 					content: '你好，我是商家，有什么可以帮你？',
 					sendTime: Date.now(),
@@ -295,7 +296,6 @@
 					data: initialMessage,
 					success: res => {
 						if (res.data.code === 200) {
-							// 创建成功后更新消息列表并初始化 WebSocket
 							this.messageList = [initialMessage];
 							this.initWebSocket();
 						} else {
@@ -372,10 +372,9 @@
 
 			scrollToBottom() {
 				if (!this.isAutoScroll) return;
-
 				this.$nextTick(() => {
 					setTimeout(() => {
-						this.scrollTop = 999999;
+						this.scroll = 9999999999999999999999999999999999999999999999999999999999999999999999999999999999;
 					}, 100);
 				});
 			},
@@ -446,20 +445,21 @@
 											readStatus: '0',
 										}
 									};
-
+									this.scrollToBottom();
 									this.websocket.send({
 										type: 'chat',
 										data: JSON.stringify(newMessage)
 									});
 
 									this.messageList.push(newMessage.data);
-									this.scrollToBottom();
+
 								} else {
 									uni.showToast({
 										title: '图片上传失败',
 										icon: 'none'
 									});
 								}
+
 							},
 							fail: (err) => {
 								uni.showToast({
@@ -478,18 +478,17 @@
 		}
 	};
 </script>
-
 <style lang="scss" scoped>
 	.chat-container {
 		display: flex;
 		flex-direction: column;
 		height: 100vh;
-		background-color: #f7f7f7;
+		background-color: #f5f7fa;
 	}
 
 	.message-scroll {
 		flex: 1;
-		padding: 16px;
+		padding: 20rpx 24rpx;
 		overflow-y: auto;
 		-webkit-overflow-scrolling: touch;
 	}
@@ -497,125 +496,146 @@
 	.message-list {
 		.message-item {
 			display: flex;
-			margin-bottom: 20px;
-			animation: fadeIn 0.3s ease;
+			align-items: flex-start;
+			margin-bottom: 24rpx;
 
 			&.message-right {
-				flex-direction: row-reverse;
+				margin-right: 50rpx;
+				flex-direction: row;
+
+				.message-content-wrap {
+					align-items: flex-end;
+					margin-right: 20rpx;
+					margin-left: 80rpx;
+				}
 
 				.message-bubble {
-					margin-left: 0;
-					margin-right: 12px;
-					background-color: #007AFF;
+					background-color: #0088ff;
 					color: #fff;
 
-					&::after {
-						content: '';
-						position: absolute;
-						right: -6px;
-						top: 12px;
-						border-left: 8px solid #007AFF;
-						border-top: 6px solid transparent;
-						border-bottom: 6px solid transparent;
+					&::before {
+						right: -8rpx;
+						border-left: 8rpx solid #0088ff;
+						border-right: none;
 					}
+				}
+
+				.message-time {
+					color: rgba(0, 0, 0, 0.45);
 				}
 			}
 
-			&.message-left .message-bubble::after {
-				content: '';
-				position: absolute;
-				left: -6px;
-				top: 12px;
-				border-right: 8px solid #fff;
-				border-top: 6px solid transparent;
-				border-bottom: 6px solid transparent;
+			&.message-left {
+				.message-content-wrap {
+					align-items: flex-start;
+					margin-left: 20rpx;
+					margin-right: 80rpx;
+				}
+
+				.message-bubble {
+					&::before {
+						left: -8rpx;
+						border-right: 8rpx solid #fff;
+						border-left: none;
+					}
+				}
 			}
 		}
 	}
 
 	.avatar-wrap {
-		width: 44px;
-		height: 44px;
+		width: 120rpx;
+		height: 120rpx;
 		flex-shrink: 0;
 
 		.avatar {
 			width: 100%;
 			height: 100%;
 			border-radius: 50%;
-			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-			border: 2px solid #fff;
+			background-color: #f0f2f5;
+			border: 1rpx solid rgba(0, 0, 0, 0.06);
 		}
 	}
 
+	.message-content-wrap {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.sender-name {
+		font-size: 32rpx;
+		color: #999;
+		margin-bottom: 8rpx;
+	}
+
 	.message-bubble {
-		max-width: 70%;
-		margin-left: 12px;
-		background-color: #fff;
-		border-radius: 16px;
-		padding: 10px 14px;
 		position: relative;
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-		transition: all 0.3s ease;
+		max-width: 80%;
+		padding: 16rpx 24rpx;
+		background: #fff;
+		border-radius: 16rpx;
+		font-size: 34rpx;
+		line-height: 1.6;
+		word-break: break-all;
+		display: inline-block;
+
+		&::before {
+			content: '';
+			position: absolute;
+			top: 20rpx;
+			border-top: 8rpx solid transparent;
+			border-bottom: 8rpx solid transparent;
+		}
 
 		&.image-message {
-			background-color: transparent;
-			padding: 0;
-			box-shadow: none;
+			padding: 8rpx;
+
+			&::before {
+				display: none;
+			}
 
 			.message-image {
-				max-width: 200px;
-				border-radius: 12px;
-				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+				width: 350rpx;
+				height: auto;
+				border: 2rpx solid #eee;
+				border-radius: 12rpx;
 			}
 		}
 	}
 
-	.sender-name {
-		font-size: 13px;
-		color: #8a8a8a;
-		margin-bottom: 4px;
-		font-weight: 500;
+	.message-time {
+		font-size: 26rpx;
+		color: rgba(0, 0, 0, 0.45);
+		margin-top: 8rpx;
 	}
 
-	.message-content {
-		font-size: 15px;
-		line-height: 1.5;
-		word-break: break-word;
-	}
-
-	.message-info {
-		display: flex;
-		justify-content: flex-end;
-		align-items: center;
-		margin-top: 4px;
-
-		.message-time {
-			font-size: 11px;
-			color: rgba(0, 0, 0, 0.4);
-		}
+	.message-text {
+		display: inline-block;
+		word-break: break-all;
 	}
 
 	.input-area {
-		padding: 12px 16px;
-		background-color: #fff;
-		border-top: 1px solid rgba(0, 0, 0, 0.05);
+		padding: 16rpx 24rpx;
+		background: #fff;
+		border-top: 1rpx solid #eee;
 	}
 
 	.input-container {
 		display: flex;
 		align-items: center;
-		background-color: #f8f8f8;
-		border-radius: 24px;
-		padding: 4px;
+		background: #f5f7fa;
+		border-radius: 24rpx;
+		padding: 12rpx 16rpx;
 	}
 
 	.message-input {
 		flex: 1;
-		height: 40px;
-		background-color: transparent;
-		padding: 0 16px;
-		font-size: 15px;
-		color: #333;
+		height: 72rpx;
+		background: transparent;
+		padding: 0 20rpx;
+		font-size: 32rpx;
 
 		&::placeholder {
 			color: #999;
@@ -625,59 +645,38 @@
 	.action-buttons {
 		display: flex;
 		align-items: center;
-		margin-left: 8px;
+		margin-left: 16rpx;
 	}
 
 	.image-btn {
-		width: 40px;
-		height: 40px;
+		width: 72rpx;
+		height: 72rpx;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		border-radius: 50%;
-		margin-right: 8px;
-		background-color: #f0f0f0;
-		transition: all 0.2s ease;
-
-		&:active {
-			background-color: #e8e8e8;
-		}
+		margin-right: 16rpx;
 
 		.action-icon {
-			width: 24px;
-			height: 24px;
-			opacity: 0.7;
+			width: 40rpx;
+			height: 40rpx;
+			opacity: 0.6;
 		}
 	}
 
 	.send-btn {
-		height: 40px;
-		padding: 0 20px;
-		background-color: #e8e8e8;
+		height: 72rpx;
+		padding: 0 32rpx;
+		background: #e8e8e8;
 		color: #999;
-		border-radius: 20px;
-		font-size: 15px;
-		transition: all 0.3s ease;
+		border-radius: 36rpx;
+		font-size: 32rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 
 		&-active {
-			background-color: #007AFF;
+			background: #0088ff;
 			color: #fff;
-		}
-
-		&:active {
-			transform: scale(0.98);
-		}
-	}
-
-	@keyframes fadeIn {
-		from {
-			opacity: 0;
-			transform: translateY(10px);
-		}
-
-		to {
-			opacity: 1;
-			transform: translateY(0);
 		}
 	}
 </style>

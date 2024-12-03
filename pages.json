@@ -22,7 +22,8 @@
 		{
 			"path": "pages/order/order",
 			"style": {
-				"navigationBarTitleText": "订单"
+				"navigationBarTitleText": "订单",
+				"enablePullDownRefresh": true
 			}
 		},
 		{
@@ -71,7 +72,8 @@
 		{
 			"path": "pages/chat/chat",
 			"style": {
-				"navigationBarTitleText": "聊天"
+				"navigationBarTitleText": "聊天",
+				"enablePullDownRefresh": true
 			}
 		},
 		{
