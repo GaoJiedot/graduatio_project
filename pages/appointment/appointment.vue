@@ -161,7 +161,7 @@
 			updateOrderStatus() {
 				if(this.orderId){
 					request.request({
-						url: `/order/finishorder/${this.orderId}`,
+						url: `/order/finishOrder/${this.orderId}`,
 						method: 'PATCH',
 						data: {
 							orderId: this.orderId,

@@ -28,6 +28,7 @@
 </template>
 
 <script>
+	import request from '@/utils/request.js'
 	export default {
 	  props: {
 	    userInfo: {
@@ -91,8 +92,8 @@
 	    getShopStatus() {
 	      if (!this.userInfo.shopId&&this.userInfo.userType===1) return;
 	      
-	      uni.request({
-	        url: `http://localhost:8080/shop/${this.userInfo.shopId}`,
+	      request.request({
+	        url: `/shop/${this.userInfo.shopId}`,
 	        method: 'GET',
 	        success: (res) => {
 	          if (res.data.code === 200 && res.data.data) {
@@ -178,8 +179,8 @@
 	
 	      const newStatus = this.shopStatus === 0 ? 1 : 0;
 	      
-	      uni.request({
-	        url: `http://localhost:8080/shop/status`,
+	      request.request({
+	        url: `/shop/status`,
 	        method: 'PATCH',
 	        data: {
 	          shopId: this.userInfo.shopId,

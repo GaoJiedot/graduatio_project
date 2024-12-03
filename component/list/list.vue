@@ -17,6 +17,7 @@
 
 <script>
 	import timeSlotSelectorVue from '../time-slot-selector/time-slot-selector.vue';
+	
 	export default {
 		props: {
 			tabulatedata: {

@@ -14,7 +14,7 @@
 					<input class="uni-input" password type="text" v-model="password" placeholder="请输入新密码" />
 					<view class="code-input-container">
 						<input class="uni-input code-input" type="number" v-model="code" placeholder="请输入验证码" />
-						<button class="code-btn" :disabled="countdown > 0" @click="sendcode">
+						<button class="code-btn" :disabled="countdown > 0" @click="sendCode">
 							{{ countdown > 0 ? `${countdown}秒后重试` : '发送验证码' }}
 						</button>
 					</view>
@@ -56,14 +56,14 @@
 				}, 1000);
 			},
 
-			async sendcode() {
+			async sendCode() {
 				if (!this.validateEmail()) {
 					return;
 				}
 
 				try {
 					const result = await request.request({
-						url: `/user/sendcode?email=${encodeURIComponent(this.email)}`,
+						url: `/user/sendCode?email=${encodeURIComponent(this.email)}`,
 						method: 'GET'
 					});
 

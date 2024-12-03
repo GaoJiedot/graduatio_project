@@ -34,6 +34,7 @@
 </template>
 
 <script>
+	import request from '@/utils/request.js'
 export default {
 	props:{
 		shopId: {
@@ -53,8 +54,8 @@ export default {
 		},
 		async fetchBookedSlots() {
 			try {
-				const response = await uni.request({
-					url: `http://localhost:8080/appointments/reserved/${this.shopId}`,
+				const response = await request.request({
+					url: `/appointments/reserved/${this.shopId}`,
 					method: 'GET'
 				});
 				

@@ -63,6 +63,7 @@
 	import uniSection from '../../uni_modules/uni-rate/components/uni-rate/uni-rate.vue'
 	import uniRate from '../../uni_modules/uni-rate/components/uni-rate/uni-rate.vue'
 	import uniPop from '../../uni_modules/uni-popup/components/uni-popup/uni-popup.vue'
+	import request from '@/utils/request.js'
 	export default {
 		components: {
 			uniRate,
@@ -141,8 +142,8 @@
 				this.rateValue = e.value
 			},
 			submitRating() {
-				uni.request({
-					url: `http://localhost:8080/order/rating/${this.orderdata.orderId}`,
+				request.request({
+					url: `/order/rating/${this.orderdata.orderId}`,
 					method: 'PATCH',
 					data: {
 						orderId: this.orderdata.orderId,
@@ -177,8 +178,8 @@
 				this.closePopup()
 			},
 			updateShopRating() {
-				uni.request({
-					url: `http://localhost:8080/order/getrating/${this.orderdata.shopId}`,
+				request.request({
+					url: `/order/getRating/${this.orderdata.shopId}`,
 					method: 'GET',
 					success: (res) => {
 						if (res.data && Array.isArray(res.data.data)) {
@@ -204,8 +205,8 @@
 			},
 
 			updateShopAverageRating(averageRating) {
-				uni.request({
-					url: `http://localhost:8080/shop/updaterating/${this.orderdata.shopId}`,
+				request.request({
+					url: `/shop/updateRating/${this.orderdata.shopId}`,
 					method: 'PATCH',
 					data: {
 						shopId: this.orderdata.shopId,

@@ -1,11 +1,9 @@
 <template>
 	<view class="chat-page">
-		<!-- Connection status -->
 		<view v-if="connectionStatus !== 'connected'" class="status-bar" :class="connectionStatus">
 			{{ getStatusMessage }}
 		</view>
 
-		<!-- Chat list -->
 		<view class="chat-list">
 			<view class="chat-item" v-for="(chat, index) in chatList" :key="index" @tap="navigateToChat(chat)">
 				<view class="avatar-container">
@@ -22,8 +20,6 @@
 				</view>
 			</view>
 		</view>
-
-		<!-- Empty state -->
 		<view v-if="chatList.length === 0" class="empty-state">
 			<text>暂无聊天记录</text>
 		</view>
@@ -166,7 +162,7 @@
 				console.log('格式化前的聊天列表:', list);
 				return list.map(item => ({
 					...item,
-					friendAvatar: item.friendAvatar || '/static/default-avatar.png',
+					friendAvatar: item.friendAvatar || 'http://localhost:8080/avatar/1_edaf677a-d5bc-4be1-a3d3-79c2c5ea6963_avatars-23.png',
 					friendName: item.friendName || item.friendname || '未知用户',
 					content: item.content || '',
 					sendTime: item.sendTime || new Date().toISOString(),
@@ -181,7 +177,6 @@
 
 				if (chatIndex !== -1) {
 					this.chatList[chatIndex].online = statusMessage.status === 'online';
-					// 强制更新视图
 					this.chatList = [...this.chatList];
 				}
 			},
@@ -208,22 +203,18 @@
 				const now = new Date();
 				const diff = now - date;
 
-				// 今天的消息显示时间
 				if (diff < 24 * 60 * 60 * 1000) {
 					return date.toTimeString().slice(0, 5);
 				}
 
-				// 一周内的消息显示星期
 				if (diff < 7 * 24 * 60 * 60 * 1000) {
 					const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 					return days[date.getDay()];
 				}
 
-				// 更早的消息显示完整日期
+
 				return `${date.getMonth() + 1}-${date.getDate()}`;
 			},
-
-			// In chat.vue, update navigateToChat function
 			navigateToChat(chat) {
 			    try {
 			        const url = `/pages/chat/message?friendId=${encodeURIComponent(chat.friendId)}&friendName=${encodeURIComponent(chat.friendName)}&friendAvatar=${encodeURIComponent(chat.friendAvatar)}`;
