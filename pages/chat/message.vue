@@ -56,27 +56,17 @@
 		</view>
 	</view>
 </template>
+
 <script>
-	const WS_URL = `ws://localhost:8080/websocket/`;
-	import request from '@/utils/request.js'
+	import WebSocketService from '@/utils/websocket.js';
+	import request from '@/utils/request.js';
+
 	export default {
 		data() {
 			return {
 				content: '',
 				scrollTop: 0,
-				messageList: [{
-					userId: null,
-					userName: '',
-					userAvatar: '',
-					friendId: '',
-					friendName: '',
-					friendAvatar: '',
-					senderId: null,
-					content: '你好，我是商家',
-					type: 'text',
-					sendTime: new Date().getTime(),
-					readStatus: false,
-				}],
+				messageList: [],
 				userId: null,
 				userName: '',
 				userAvatar: '',
@@ -86,18 +76,27 @@
 				shopId: null,
 				isAutoScroll: true,
 				lastScrollTop: 0,
-				websocket: null,
-				type: 'text'
-
+				wsService: null,
+				type: 'text',
+				connectionStatus: 'disconnected'
 			};
+		},
+
+		computed: {
+			getStatusMessage() {
+				const messages = {
+					connecting: '正在连接...',
+					disconnected: '连接已断开，正在重新连接...',
+
+				};
+				return messages[this.connectionStatus] || '';
+			}
 		},
 
 		async onLoad(options) {
 			console.log('Loaded with options:', options);
-
 			await this.getUserInfo();
 
-			// Then handle shop or direct friend connection
 			if (options.shopId) {
 				this.shopId = options.shopId;
 				await this.getFriendInfo();
@@ -108,7 +107,19 @@
 			}
 
 			if (this.friendId) {
-				this.selectChat();
+				this.initChat();
+				request.request({
+					url: `/chat/clearUnread/${this.userId}/${this.friendId}`,
+					method: 'PATCH',
+					success: res => {
+						if (res.data.code === 200) {
+							console.log('清除未读状态成功');
+							uni.$emit('updateUnreadStatus', {
+								friendId: this.friendId
+							});
+						}
+					}
+				});
 			} else {
 				console.error('No friendId available after initialization');
 				uni.showToast({
@@ -117,8 +128,11 @@
 				});
 			}
 		},
+
 		onUnload() {
-			this.closeWebSocket()
+			if (this.wsService) {
+				this.wsService.close();
+			}
 		},
 
 		methods: {
@@ -129,6 +143,7 @@
 				}
 				this.lastScrollTop = scrollTop;
 			},
+
 			getUserInfo() {
 				return new Promise((resolve) => {
 					uni.getStorage({
@@ -151,6 +166,7 @@
 					});
 				});
 			},
+
 			getFriendInfo() {
 				return new Promise((resolve) => {
 					if (!this.shopId) {
@@ -168,7 +184,6 @@
 								this.friendId = res.data.data.userId;
 								this.friendName = res.data.data.userName;
 								this.friendAvatar = res.data.data.userAvatar;
-
 							}
 							resolve();
 						},
@@ -179,24 +194,24 @@
 								icon: 'none'
 							});
 							resolve();
-
 						}
 					});
 				});
 			},
-			selectChat() {
-				if (!this.friendId) {
-					console.error('friendId is undefined or null!');
-					return;
-				}
+
+			initChat() {
 				request.request({
 					url: `/chat/getHistoryChat/${this.userId}/${this.friendId}`,
 					method: 'GET',
 					success: res => {
 						if (res.data.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
-							this.messageList = res.data.data;
+							// 处理历史消息，添加缺失的senderId
+							this.messageList = res.data.data.map(msg => ({
+								...msg,
+								// 根据消息发送者的userId判断senderId
+								senderId: msg.userId === this.userId ? this.userId : this.friendId
+							}));
 							this.initWebSocket();
-
 						} else {
 							this.createChatList();
 							this.createChat();
@@ -209,41 +224,58 @@
 							icon: 'none'
 						});
 					}
-				})
+				});
 			},
+
+
 			initWebSocket() {
-				if (this.websocket) {
-					this.closeWebSocket();
-				}
-				try {
-					this.websocket = uni.connectSocket({
-						url: `${WS_URL}${this.userId}`,
-						success: () => {},
-					})
-					this.websocket.onOpen(() => {
-						console.log("WebSocket连接已打开")
-						const initMessage = {
-							type: 'init',
-							data: {
-								userId: this.userId,
-								friendId: this.friendId,
-							}
+				// 创建WebSocket服务实例
+				this.wsService = new WebSocketService({
+					userId: this.userId,
+				});
+
+				// 注册事件处理器
+				this.wsService.on('connected', () => {
+					console.log('WebSocket connected');
+					this.connectionStatus = 'connected';
+
+					// 修改初始化消息的结构
+					const initMessage = {
+						userId: this.userId,
+						friendId: this.friendId
+					};
+
+					// 直接发送对象，不需要额外的type包装
+					this.wsService.send('init', initMessage);
+				});
+
+				// 修改消息处理器，确保正确解析消息
+				this.wsService.on('message', (message) => {
+					try {
+						console.log('Received message:', message);
+						if (typeof message === 'string') {
+							message = JSON.parse(message);
 						}
-						this.websocket.send({
-							type: 'init',
-							data: JSON.stringify(initMessage)
-						})
-					})
-					this.websocket.onMessage((res) => {
-						console.log("收到消息", res)
-						const message = JSON.parse(res.data)
-						console.log(message)
+
 						switch (message.type) {
 							case 'historyChat':
-								this.messageList = message.data;
+								// 处理历史消息数据
+								this.messageList = Array.isArray(message.data) ? message.data.map(msg => ({
+									...msg,
+									senderId: msg.userId === this.userId ? this.userId : this.friendId
+								})) : [];
 								break;
 							case 'message':
-								this.messageList.push(message.data);
+								if (message.data) {
+									const messageData = typeof message.data === 'string' ? JSON.parse(message
+										.data) : message.data;
+									// 确保新消息包含senderId
+									if (!messageData.senderId) {
+										messageData.senderId = messageData.userId === this.userId ? this.userId :
+											this.friendId;
+									}
+									this.messageList.push(messageData);
+								}
 								break;
 							case 'messageStatus':
 								if (message.status === 'success') {
@@ -251,30 +283,34 @@
 								}
 								break;
 						}
-						uni.setNavigationBarTitle({
-							title: `正在和${this.friendName}聊天`
-						});
-						this.scrollToBottom()
-					})
-					this.websocket.onClose(() => {
-						console.log("WebSocket连接已关闭")
-					})
-					this.websocket.onError(() => {
-						console.log("WebSocket连接发生错误")
-					})
+						this.scrollToBottom();
+					} catch (error) {
+						console.error('处理消息时出错:', error);
+					}
+				});
 
+				this.wsService.on('error', () => {
+					console.log('WebSocket connection error');
+					this.connectionStatus = 'error';
 
-				} catch (e) {
-					console.log("WebSocket连接失败", e)
-				}
+				});
 
+				this.wsService.on('close', () => {
+					console.log('WebSocket connection closed');
+					this.connectionStatus = 'disconnected';
+				});
+
+				this.wsService.on('reconnectFailed', () => {
+					uni.showToast({
+						title: '连接失败，请检查网络后重试',
+						icon: 'none'
+					});
+				});
+
+				// 建立连接
+				this.wsService.connect();
 			},
-			closeWebSocket() {
-				if (this.websocket) {
-					this.websocket.close()
-					this.websocket = null
-				}
-			},
+
 			createChat() {
 				const initialMessage = {
 					userId: this.friendId,
@@ -315,6 +351,7 @@
 					}
 				});
 			},
+
 			createChatList() {
 				if (!this.userId || !this.friendId) {
 					console.error('缺少必要的用户信息');
@@ -338,8 +375,6 @@
 						friendAvatar: this.userAvatar,
 					}
 				];
-
-				console.log('创建聊天列表的数据:', chatListData);
 
 				request.request({
 					url: '/chatList/createChatList',
@@ -365,6 +400,7 @@
 					}
 				});
 			},
+
 			formatTime(timestamp) {
 				const date = new Date(timestamp);
 				return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
@@ -374,7 +410,7 @@
 				if (!this.isAutoScroll) return;
 				this.$nextTick(() => {
 					setTimeout(() => {
-						this.scroll = 9999999999999999999999999999999999999999999999999999999999999999999999999999999999;
+						this.scrollTop = 999999999;
 					}, 100);
 				});
 			},
@@ -387,31 +423,23 @@
 
 			sendMessage() {
 				if (this.content.trim()) {
-					const newMessage = {
-						type: 'chat',
-						data: {
-							userId: this.userId,
-							userName: this.userName,
-							friendId: this.friendId,
-							friendName: this.friendName,
-							userAvatar: this.userAvatar,
-							friendAvatar: this.friendAvatar,
-							senderId: this.userId,
-							content: this.content.trim(),
-							sendTime: Date.now(),
-							type: this.type,
-							readStatus: '0',
-						}
+					const message = {
+						userId: this.userId,
+						userName: this.userName,
+						friendId: this.friendId,
+						friendName: this.friendName,
+						userAvatar: this.userAvatar,
+						friendAvatar: this.friendAvatar,
+						senderId: this.userId,
+						content: this.content.trim(),
+						sendTime: Date.now(),
+						type: this.type,
+						readStatus: '0',
 					};
-					console.log('发送消息:', newMessage);
-					this.websocket.send({
-						type: 'chat',
-						data: JSON.stringify(newMessage)
-					})
-
+					this.wsService.send('chat', message);
 					this.content = '';
-					this.messageList.push(newMessage.data)
-
+					this.messageList.push(message);
+					this.scrollToBottom();
 				}
 			},
 			chooseImage() {
@@ -421,45 +449,39 @@
 						const tempFilePath = res.tempFilePaths[0];
 						request.uploadFile({
 							url: `/chat/upload/${this.userId}`,
-
 							filePath: tempFilePath,
 							name: 'file',
 							success: (uploadFileRes) => {
 								const data = JSON.parse(uploadFileRes.data);
 								if (data.code === 200) {
-									console.log(data)
 									const imageUrl = data.data;
-									const newMessage = {
-										type: 'chat',
-										data: {
-											userId: this.userId,
-											userName: this.userName,
-											friendId: this.friendId,
-											friendName: this.friendName,
-											userAvatar: this.userAvatar,
-											friendAvatar: this.friendAvatar,
-											senderId: this.userId,
-											content: imageUrl,
-											sendTime: Date.now(),
-											type: 'image',
-											readStatus: '0',
-										}
+									// 构造符合ChatDto结构的图片消息
+									const message = {
+										userId: this.userId,
+										userName: this.userName,
+										friendId: this.friendId,
+										friendName: this.friendName,
+										userAvatar: this.userAvatar,
+										friendAvatar: this.friendAvatar,
+										senderId: this.userId,
+										content: imageUrl,
+										sendTime: Date.now(),
+										type: 'image',
+										readStatus: '0'
 									};
+
+									// 发送消息
+									this.wsService.send('chat', message);
+
+									// 更新本地消息列表
+									this.messageList.push(message);
 									this.scrollToBottom();
-									this.websocket.send({
-										type: 'chat',
-										data: JSON.stringify(newMessage)
-									});
-
-									this.messageList.push(newMessage.data);
-
 								} else {
 									uni.showToast({
 										title: '图片上传失败',
 										icon: 'none'
 									});
 								}
-
 							},
 							fail: (err) => {
 								uni.showToast({
@@ -471,10 +493,9 @@
 								uni.hideLoading();
 							}
 						});
-
 					}
 				});
-			},
+			}
 		}
 	};
 </script>

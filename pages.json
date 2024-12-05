@@ -10,7 +10,9 @@
 		{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "首页"
+				"navigationBarTitleText": "首页",
+				"onReachBottomDistance": 50,
+				"enablePullDownRefresh": true
 			}
 		},
 		{
@@ -98,7 +100,8 @@
 		{
 			"path": "pages/search-detail/search-detail",
 			"style": {
-				"navigationBarTitleText": ""
+				"navigationBarTitleText": "",
+				"onReachBottomDistance": 50
 			}
 
 		},
@@ -121,87 +124,76 @@
 			}
 		},
 		{
-			"path" : "pages/user-management/user-management",
-			"style" : 
-			{
-				"navigationBarTitleText" : "用户管理"
+			"path": "pages/user-management/user-management",
+			"style": {
+				"navigationBarTitleText": "用户管理",
+				"enablePullDownRefresh": true
 			}
 		},
 		{
-			"path" : "pages/merchant-management/merchant-management",
-			"style" : 
-			{
-				"navigationBarTitleText" : "商家管理"
+			"path": "pages/merchant-management/merchant-management",
+			"style": {
+				"navigationBarTitleText": "商家管理"
 			}
 		},
 		{
-			"path" : "pages/shop-management/shop-management",
-			"style" : 
-			{
-				"navigationBarTitleText" : "店铺管理"
+			"path": "pages/shop-management/shop-management",
+			"style": {
+				"navigationBarTitleText": "店铺管理"
 			}
 		},
 		{
-			"path" : "pages/product-management/product-management",
-			"style" : 
-			{
-				"navigationBarTitleText" : "商品管理"
+			"path": "pages/product-management/product-management",
+			"style": {
+				"navigationBarTitleText": "商品管理"
 			}
 		},
 		{
-			"path" : "pages/edit-shop/edit-shop",
-			"style" : 
-			{
-				"navigationBarTitleText" : "编辑信息"
+			"path": "pages/edit-shop/edit-shop",
+			"style": {
+				"navigationBarTitleText": "编辑信息"
 			}
 		},
 		{
-			"path" : "pages/edit-user/edit-user",
-			"style" : 
-			{
-				"navigationBarTitleText" : "修改用户"
+			"path": "pages/edit-user/edit-user",
+			"style": {
+				"navigationBarTitleText": "修改用户"
 			}
 		},
 		{
-			"path" : "pages/add-product/add-product",
-			"style" : 
-			{
-				"navigationBarTitleText" : "添加商品"
+			"path": "pages/add-product/add-product",
+			"style": {
+				"navigationBarTitleText": "添加商品"
 			}
 		},
 		{
-			"path" : "pages/edit-product/edit-product",
-			"style" : 
-			{
-				"navigationBarTitleText" : "编辑商品"
+			"path": "pages/edit-product/edit-product",
+			"style": {
+				"navigationBarTitleText": "编辑商品"
 			}
 		},
 		{
-			"path" : "pages/apply/apply",
-			"style" : 
-			{
-				"navigationBarTitleText" : "申请成为商家"
+			"path": "pages/apply/apply",
+			"style": {
+				"navigationBarTitleText": "申请成为商家"
 			}
 		},
 		{
-			"path" : "pages/apply-management/apply-management",
-			"style" : 
-			{
-				"navigationBarTitleText" : "申请管理"
+			"path": "pages/apply-management/apply-management",
+			"style": {
+				"navigationBarTitleText": "申请管理"
 			}
 		},
 		{
-			"path" : "pages/today-appointment/today-appointment",
-			"style" : 
-			{
-				"navigationBarTitleText" : "今日预约"
+			"path": "pages/today-appointment/today-appointment",
+			"style": {
+				"navigationBarTitleText": "今日预约"
 			}
 		},
 		{
-			"path" : "pages/hot-search/hot-search",
-			"style" : 
-			{
-				"navigationBarTitleText" : "热门设置"
+			"path": "pages/hot-search/hot-search",
+			"style": {
+				"navigationBarTitleText": "热门设置"
 			}
 		}
 
@@ -220,19 +212,19 @@
 	"app-plus": {
 		"softinputMode": "adjustResize",
 		"modules": {
-		            "VideoPlayer": {}
-		        },
-			"plugins": {
-			    "map": {
-			      "version": "2.0.0",
-			      "provider": "wx"
-			    }
-			  },
-			  "permission": {
-			    "scope.location": {
-			      "desc": "需要获取您的位置信息"
-			    }
-			  }	
+			"VideoPlayer": {}
+		},
+		"plugins": {
+			"map": {
+				"version": "2.0.0",
+				"provider": "wx"
+			}
+		},
+		"permission": {
+			"scope.location": {
+				"desc": "需要获取您的位置信息"
+			}
+		}
 	},
 
 

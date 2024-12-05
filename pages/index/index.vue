@@ -1,5 +1,5 @@
 <template>
-	<view class="container">
+	<view class="container" @scrolltolower="onReachBottom" :style="{ height: '100vh', overflow: 'scroll' }">
 		<view class="box">
 			<view class="searchbox" @click="search">
 				<img src="../../static/icon/搜索框.png" alt="" />
@@ -11,13 +11,23 @@
 		<view class="mytext">
 			<text>为你推荐</text>
 		</view>
-		<view v-for="(item, index) in data" :key="index" class="list-item" @click="toDeatils(item)">
-			<listVue :tabulatedata="item" :shopId="item.shopId"></listVue>
+
+		<view v-if="initialLoading" class="loading-container">
+			<uni-load-more status="loading" />
 		</view>
-		<uni-load-more color="#007AFF" :status="status" />
+		<view v-else-if="error" class="error-container">
+			<text>{{ error }}</text>
+			<button @click="resetPagination">重试</button>
+		</view>
 
+		<template v-else>
+			<view v-for="(item, index) in data" :key="index" class="list-item" @click="toDeatils(item)">
+				<listVue :tabulatedata="item" :shopId="item.shopId"></listVue>
+			</view>
+
+			<uni-load-more  :status="status" />
+		</template>
 	</view>
-
 </template>
 
 <script>
@@ -28,7 +38,6 @@
 	import uniLoadMore from '@/uni_modules/uni-load-more/components/uni-load-more/uni-load-more.vue'
 
 	export default {
-
 		components: {
 			marginSwiperVue,
 			menuVue,
@@ -38,24 +47,18 @@
 		data() {
 			return {
 				status: 'more',
-				statusTypes: [{
-					value: 'more',
-					text: '加载前',
-					checked: true
-				}, {
-					value: 'loading',
-					text: '加载中',
-					checked: false
-				}, {
-					value: 'noMore',
-					text: '没有更多',
-					checked: false
-				}],
 				userInfo: {
 					userType: null,
-					shopId: null
+					shopId: null,
+					userAccount: null // Add userAccount to store
 				},
 				data: [],
+				page: 1,
+				pageSize: 5,
+				loading: false,
+				noMoreData: false,
+				error: null,
+				initialLoading: true
 			}
 		},
 		methods: {
@@ -65,121 +68,161 @@
 				});
 			},
 			toDeatils(item) {
+				if (!item || !item.shopId) {
+					console.error('Invalid item data:', item);
+					return;
+				}
 				uni.navigateTo({
-					url: `/pages/Store-details/Store-details?shopId=${item.shopId}&userPhone=${this.userInfo.userAccount}`,
+					url: `/pages/Store-details/Store-details?shopId=${item.shopId}&userPhone=${this.userInfo.userAccount || ''}`,
 				});
 			},
-			// 获取用户信息
-			getUserInfo() {
-				return new Promise((resolve, reject) => {
-					uni.getStorage({
-						key: 'userInfo',
-						success: (res) => {
-							this.userInfo = res.data;
-							resolve(res.data);
-						},
-						fail: (err) => {
-							console.error('获取用户信息失败:', err);
-							this.userInfo = {
-								userType: null,
-								shopId: null
-							};
-							reject(err);
+			async getUserInfo() {
+				try {
+					const res = await uni.getStorage({
+						key: 'userInfo'
+					});
+					this.userInfo = res.data;
+					return res.data;
+				} catch (err) {
+					console.error('获取用户信息失败:', err);
+					this.userInfo = {
+						userType: null,
+						shopId: null,
+						userAccount: null
+					};
+					throw err;
+				}
+			},
+			async getListData() {
+				if (this.loading || this.noMoreData) return;
+
+				this.loading = true;
+				this.status = 'loading';
+				this.error = null;
+
+				try {
+					const res = await request.request({
+						url: '/tabulate/type/1',
+						method: 'GET',
+						data: {
+							page: this.page,
+							pageSize: this.pageSize
 						}
 					});
-				});
-			},
-			// 获取列表数据
-			getListData() {
-				request.request({
-					url: '/tabulate/type/1',
-					method: 'GET',
-					success: (res) => {
-						if (res.data.code === 200) {
-							this.data = res.data.data.map(item => ({
-								...item,
-								tabulateTabs: item.tabulateTabs ? item.tabulateTabs.split(',') : []
-							}));
-						}
-					},
-					fail: (err) => {
-						console.error('获取列表数据失败:', err);
+
+					console.log('API Response:', res); // Debug log
+
+					if (!res || !res.data) {
+						throw new Error('Invalid response format');
 					}
-				});
+
+					if (res.data.code === 200) {
+						const responseData = Array.isArray(res.data.data) ? res.data.data : [];
+
+						if (responseData.length === 0 && this.page === 1) {
+							this.status = 'noMore';
+							this.noMoreData = true;
+							return;
+						}
+
+						const newData = responseData.map(item => ({
+							...item,
+							tabulateTabs: item.tabulateTabs ? item.tabulateTabs.split(',') : []
+						}));
+
+						if (newData.length < this.pageSize) {
+							this.noMoreData = true;
+							this.status = 'noMore';
+						} else {
+							this.status = 'more';
+						}
+
+						this.data = this.page === 1 ? newData : [...this.data, ...newData];
+						this.page += 1;
+					} else {
+						throw new Error(res.data.message || '获取数据失败');
+					}
+				} catch (err) {
+					console.error('获取列表数据失败:', err);
+					this.error = err.message || '获取数据失败，请稍后重试';
+					this.status = 'noMore';
+				} finally {
+					this.loading = false;
+					this.initialLoading = false;
+				}
 			},
-			onChange(e) {
-				this.status = e.detail.value
+			loadMore() {
+				if (!this.loading && !this.noMoreData && !this.error) {
+					this.getListData();
+				}
 			},
-			clickLoadMore(e) {
-				uni.showToast({
-					icon: 'none',
-					title: "当前状态：" + e.detail.status
-				})
+			async resetPagination() {
+				this.page = 1;
+				this.data = [];
+				this.noMoreData = false;
+				this.status = 'more';
+				this.error = null;
+				this.initialLoading = true;
+				await this.getListData();
 			}
 		},
 		async onLoad() {
 			try {
 				await this.getUserInfo();
-				this.getListData();
+				await this.getListData();
 			} catch (err) {
 				console.error('页面加载失败:', err);
+				this.error = '页面加载失败，请稍后重试';
+			} finally {
+				this.initialLoading = false;
 			}
 		},
-		onShow() {
-			this.getUserInfo(); // 每次显示页面时重新获取用户信息
+		onReachBottom() {
+			console.log('Page reached bottom'); // Debug log
+			if (!this.loading && !this.noMoreData && !this.error) {
+				this.getListData();
+			}
+		},
+		async onPullDownRefresh() {
+			try {
+				await this.getUserInfo();
+				await this.resetPagination();
+			} catch (err) {
+				console.error('刷新失败:', err);
+				this.error = '刷新失败，请稍后重试';
+			} finally {
+				uni.stopPullDownRefresh();
+			}
+		},
+		async onShow() {
+			await this.getUserInfo();
 		}
 	};
 </script>
 
 <style lang="scss" scoped>
-	.container {
-		.uni-list-item {
-			border-bottom-style: solid;
-			border-bottom-width: 1px;
-			border-bottom-color: #eee;
-			font-size: 14px;
-		}
+	.container {}
 
-		.uni-list-item__container {
-			/* #ifndef APP-NVUE */
+	.box {
+		display: flex;
+		justify-content: center;
+		margin-top: 30rpx;
+		margin-bottom: 30rpx;
+
+		.searchbox {
+			border-radius: 30rpx;
+			background-color: #EEEEEE;
+			width: 600rpx;
+			height: 60rpx;
 			display: flex;
-			width: 100%;
-			box-sizing: border-box;
-			/* #endif */
-			padding: 12px 15px;
-			flex: 1;
-			position: relative;
-			flex-direction: row;
-			justify-content: space-between;
 			align-items: center;
-		}
 
-		.uni-list-item__content-title {
-			font-size: 14px;
-			color: #666;
-		}
-
-		.box {
-			display: flex;
-			justify-content: center;
-			margin-top: 30rpx;
-			margin-bottom: 30rpx;
-
-			.searchbox {
-				border-radius: 30rpx;
-				background-color: #EEEEEE;
-				width: 600rpx;
-				height: 60rpx;
-				display: flex;
-				align-items: center;
-
-				img {
-					padding-left: 20rpx;
-					width: 50rpx;
-					height: 50rpx;
-					object-fit: contain;
-					align-content: start;
-				}
+			img {
+				padding-left: 20rpx;
+				width: 50rpx;
+				height: 50rpx;
+				object-fit: contain;
+				align-content: start;
 			}
 		}
 	}
@@ -197,5 +240,12 @@
 		&:hover {
 			background-color: #f5f5f5;
 		}
+	}
+
+	.no-result {
+		text-align: center;
+		padding: 40rpx 0;
+		color: #999;
+		font-size: 28rpx;
 	}
 </style>
