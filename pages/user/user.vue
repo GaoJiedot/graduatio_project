@@ -1,23 +1,33 @@
 <template>
 	<view class="container">
+		<!-- 用户信息盒子 -->
 		<view class="uersbox">
+			<!-- 用户信息 -->
 			<view class="user-info-box">
 				<view class="user-info">
+					<!-- 用户头像 -->
 					<image class="avatar" :src="data.userAvatar" />
+					<!-- 用户详情 -->
 					<view class="user-details">
+						<!-- 用户名 -->
 						<text class="username">{{data.userName}}</text>
+						<!-- 用户ID -->
 						<text class="user-id">ID:{{data.userId}}</text>
 					</view>
 				</view>
 			</view>
 		</view>
+		<!-- 其他选项 -->
 		<view class="otherbox">
+			<!-- 个人信息 -->
 			<view class="other" @click="account">
 				个人信息
 			</view>
+			<!-- 免责条款 -->
 			<view class="other" @click="disclaimer">
 				免责条款
 			</view>
+			<!-- 申请成为商家 -->
 				<view class="other" @click="apply" v-if="data.userType==2">
 					申请成为商家
 				</view>

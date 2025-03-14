@@ -66,7 +66,7 @@
 	      },
 	      {
 	        img: "/static/menuicon/完成.png",
-	        menutext: '一键上班'  // 设置默认值
+	        menutext: '一键上班' 
 	      },
 	      {
 	        img: "/static/menuicon/通知.png",

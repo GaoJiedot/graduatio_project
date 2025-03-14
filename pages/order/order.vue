@@ -33,7 +33,8 @@
 			return {
 				tabs: ['待使用', '已使用'],
 				orderdata: [],
-				activeTab: 0
+				activeTab: 0,
+				userId: null
 			};
 		},
 		onPullDownRefresh() {
@@ -44,32 +45,83 @@
 			}, 1000);
 		},
 		methods: {
-
+			async getUserInfo() {
+				return new Promise((resolve, reject) => {
+					uni.getStorage({
+						key: 'userInfo',
+						success: (res) => {
+							this.userId = res.data.userId;
+							console.log('获取到的用户id', this.userId);
+							resolve(res.data.userId);
+						},
+						fail: (err) => {
+							console.error('获取用户信息失败:', err);
+							uni.showToast({
+								title: '请先登录',
+								icon: 'none'
+							});
+							reject(err);
+						}
+					});
+				});
+			},
+			// 切换标签页
 			switchTab(index) {
 				this.activeTab = index;
 				this.fetchOrderData(index + 1);
 			},
-			fetchOrderData(status) {
-				request.request({
-					url: `/order/status/${status}`,
-					method: 'GET',
-					success: (res) => {
-						this.orderdata = res.data.data;
-						console.log('获取到的数据:', this.orderdata);
-					},
-					fail: (err) => {
-						console.error('Request failed:', err);
+			async fetchOrderData(status) {
+
+				if (!this.userId) {
+					try {
+						await this.getUserInfo();
+					} catch (err) {
+						return;
 					}
-				});
-			},
+				}
 
+				if (this.userId) {
+					request.request({
+						url: `/order/status/${status}`,
+						method: 'GET',
+						data: {
+							userId: this.userId,
+							status: status
+						},
+						success: (res) => {
+							if (res.data.code === 200) {
+								this.orderdata = res.data.data;
+								console.log('获取到的数据:', this.orderdata);
+							} else {
+								uni.showToast({
+									title: res.data.msg || '获取数据失败',
+									icon: 'none'
+								});
+							}
+						},
+						fail: (err) => {
+							console.error('Request failed:', err);
+							uni.showToast({
+								title: '网络请求失败',
+								icon: 'none'
+							});
+						}
+					});
+				}
+			}
 		},
-		onLoad() {
 
-			this.fetchOrderData(1);
+		async onLoad() {
+			await this.getUserInfo();
+			await this.fetchOrderData(1);
 		},
-		onShow() {
-			this.fetchOrderData(this.activeTab + 1);
+		async onShow() {
+			 try {
+			        await this.getUserInfo();
+			        await this.fetchOrderData(this.activeTab + 1);
+			    } catch (err) {
+			        console.error('onShow error:', err);
+			    }
 		}
 	}
 </script>

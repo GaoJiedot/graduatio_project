@@ -1,25 +1,17 @@
 <template>
 	<view class="container">
-		<!-- 第一个盒子 -->
 		<view class="box1">
-			<!-- 图片 -->
 			<img :src="orderdata.orderImage" alt="" />
-			<!-- 内容 -->
 			<view class="content">
 				<text>{{orderdata.orderName}}</text>
-				<!-- 根据orderstate的值判断是否显示价格 -->
 				<view class="price-container" v-if="orderdata.orderStatus===1">
 					<text class="price">{{orderdata.orderPrice}}</text>
 				</view>
 			</view>
 		</view>
-		<!-- 根据orderstate的值判断是否显示预约按钮 -->
 		<view class="touse" v-if="orderdata.orderStatus===1">
 			<button class="appointment-btn" @click="toapp">去预约</button>
 		</view>
-
-
-		<!-- 根据orderstate的值判断是否显示已使用状态 -->
 		<view class="used" v-if="orderdata.orderStatus===2">
 			<view class="used-status">
 				<text class="used-icon">✓</text>

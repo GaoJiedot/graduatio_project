@@ -43,7 +43,6 @@ export default {
 				latitude: null,
 				longitude: null
 			},
-			// 分页相关
 			page: 1,
 			pageSize: 10,
 			loadMoreStatus: 'more',
@@ -94,6 +93,12 @@ export default {
 			try {
 				const response = await this.fetchSearchResults();
 				this.processSearchResults(response);
+				uni.showLoading({
+					title: '加载中'
+				});
+				setTimeout(() => {
+					uni.hideLoading();
+				}, 500);
 			} catch (err) {
 				console.error('搜索失败:', err);
 				uni.showToast({
@@ -108,7 +113,7 @@ export default {
 		},
 
 		async fetchSearchResults() {
-			const url = `/tabulate/search/${encodeURIComponent(this.searchQuery)}`;
+			const url = `/tabulate/search/${encodeURIComponent(this.searchQuery)}`||`/shop/search/${encodeURIComponent(this.searchQuery)}`;
 			return new Promise((resolve, reject) => {
 				request.request({
 					url,

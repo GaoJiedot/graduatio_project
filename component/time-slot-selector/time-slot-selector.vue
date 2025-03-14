@@ -1,32 +1,23 @@
 <template>
 	<view class="container1">
-		<!-- 时间段显示 -->
 		<view class="time-slot-display">
-			<!-- 时间段列表 -->
 			<view class="time-slots" scroll-x="true" show-scrollbar="false">
-				<!-- 时间段容器 -->
 				<view class="slot-container">
-					<!-- 遍历时间段 -->
 					<view v-for="slot in timeSlots" :key="slot" class="time-slot"
 						:class="isBooked(slot) ? 'booked' : 'available'">
-						<!-- 时间段数字 -->
 						<text class="slot-number">{{ slot }}</text>
 					</view>
 				</view>
 			</view>
-			<!-- 图例 -->
 			<view class="legend">
-				<!-- 已预订时段 -->
 				<view class="legend-item">
 					<view class="legend-color booked"></view>
 					<text>已预订时段</text>
 				</view>
-				<!-- 可预订时段 -->
 				<view class="legend-item">
 					<view class="legend-color available"></view>
 					<text>可预订时段</text>
 				</view>
-				<!-- 预约按钮 -->
 				<button class="submit-btn">进店</button>
 			</view>
 		</view>

@@ -31,6 +31,7 @@
 </template>
 
 <script>
+	// 导入组件
 	import listVue from '../../component/list/list.vue';
 	import menuVue from '../../component/menu/menu.vue';
 	import marginSwiperVue from 'component/margin-swiper/margin-swiper.vue';
@@ -46,27 +47,38 @@
 		},
 		data() {
 			return {
+				// 状态
 				status: 'more',
+				// 用户信息
 				userInfo: {
 					userType: null,
 					shopId: null,
-					userAccount: null // Add userAccount to store
+					userAccount: null 
 				},
+				// 数据
 				data: [],
+				// 页码
 				page: 1,
+				// 每页数据量
 				pageSize: 5,
+				// 加载状态
 				loading: false,
+				// 是否没有更多数据
 				noMoreData: false,
+				// 错误信息
 				error: null,
+				// 初始加载状态
 				initialLoading: true
 			}
 		},
 		methods: {
+			// 搜索
 			search() {
 				uni.navigateTo({
 					url: "/pages/search/search"
 				});
 			},
+			// 跳转到详情页
 			toDeatils(item) {
 				if (!item || !item.shopId) {
 					console.error('Invalid item data:', item);
@@ -76,6 +88,7 @@
 					url: `/pages/Store-details/Store-details?shopId=${item.shopId}&userPhone=${this.userInfo.userAccount || ''}`,
 				});
 			},
+			// 获取用户信息
 			async getUserInfo() {
 				try {
 					const res = await uni.getStorage({
@@ -93,6 +106,7 @@
 					throw err;
 				}
 			},
+			// 获取列表数据
 			async getListData() {
 				if (this.loading || this.noMoreData) return;
 
@@ -109,8 +123,10 @@
 							pageSize: this.pageSize
 						}
 					});
-
-					console.log('API Response:', res); // Debug log
+					uni.showLoading({
+						title: '加载中'
+					});
+					console.log('API Response:', res);
 
 					if (!res || !res.data) {
 						throw new Error('Invalid response format');
@@ -149,8 +165,13 @@
 				} finally {
 					this.loading = false;
 					this.initialLoading = false;
+					setTimeout(() => {
+						uni.hideLoading();
+					}, 500);
+				
 				}
 			},
+			// 加载更多
 			loadMore() {
 				if (!this.loading && !this.noMoreData && !this.error) {
 					this.getListData();
@@ -178,7 +199,7 @@
 			}
 		},
 		onReachBottom() {
-			console.log('Page reached bottom'); // Debug log
+			console.log('Page reached bottom'); 
 			if (!this.loading && !this.noMoreData && !this.error) {
 				this.getListData();
 			}

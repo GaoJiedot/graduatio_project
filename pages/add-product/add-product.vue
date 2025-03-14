@@ -99,15 +99,15 @@ export default {
 		},
 
 		async handleImageUpload() {
-			// 先验证基本信息
+
 			if (!this.validateBasicInfo()) return;
 
 			try {
-				// 如果还没有商品ID，先提交基本信息
+
 				if (!this.productId) {
 					await this.submitBasicInfo();
 				}
-				// 选择并上传图片
+
 				await this.chooseAndUploadImage();
 			} catch (error) {
 				uni.showToast({
